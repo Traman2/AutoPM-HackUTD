@@ -1,0 +1,160 @@
+import mongoose, { Schema, Document, Model } from 'mongoose';
+
+// Reddit API Integration Interface
+interface IRedditAuth {
+  accessToken?: string;
+  refreshToken?: string;
+  tokenExpiry?: Date;
+  scope?: string;
+}
+
+interface IJiraAuth {
+  cloudSite?: string;
+  apiToken?: string;
+  userEmail?: string;
+  serverUrl?: string;
+  personalAccessToken?: string;
+  tokenExpiry?: Date;
+  scopes?: string[];
+}
+
+export interface IUser extends Document {
+  username: string;
+  firstName: string;
+  email: string;
+  sub: string;
+  dateOfBirth?: Date;
+
+  redditAuth?: IRedditAuth;
+  jiraAuth?: IJiraAuth;
+
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const RedditAuthSchema = new Schema<IRedditAuth>({
+  accessToken: {
+    type: String,
+    select: false,
+  },
+  refreshToken: {
+    type: String,
+    select: false,
+  },
+  tokenExpiry: {
+    type: Date,
+  },
+  scope: {
+    type: String,
+    default: 'read,identity',
+  },
+}, { _id: false });
+
+const JiraAuthSchema = new Schema<IJiraAuth>({
+  cloudSite: {
+    type: String,
+  },
+  apiToken: {
+    type: String,
+    select: false,
+  },
+  userEmail: {
+    type: String,
+  },
+  serverUrl: {
+    type: String,
+  },
+  personalAccessToken: {
+    type: String,
+    select: false,
+  },
+  tokenExpiry: {
+    type: Date,
+  },
+  scopes: [{
+    type: String,
+  }],
+}, { _id: false });
+
+const UserSchema = new Schema<IUser>({
+  username: {
+    type: String,
+    required: [true, 'Username is required'],
+    unique: true,
+    trim: true,
+    minlength: [3, 'Username must be at least 3 characters'],
+    maxlength: [30, 'Username cannot exceed 30 characters'],
+  },
+  firstName: {
+    type: String,
+    required: [true, 'First name is required'],
+    trim: true,
+    maxlength: [50, 'First name cannot exceed 50 characters'],
+  },
+  email: {
+    type: String,
+    required: [true, 'Email is required'],
+    unique: true,
+    trim: true,
+    lowercase: true,
+    match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email address'],
+  },
+  sub: {
+    type: String,
+    required: [true, 'OAuth sub is required'],
+    unique: true,
+    index: true,
+  },
+  dateOfBirth: {
+    type: Date,
+    validate: {
+      validator: function(value: Date) {
+        return value < new Date();
+      },
+      message: 'Date of birth must be in the past',
+    },
+  },
+  redditAuth: {
+    type: RedditAuthSchema,
+    default: undefined,
+  },
+  jiraAuth: {
+    type: JiraAuthSchema,
+    default: undefined,
+  },
+}, {
+  timestamps: true,
+  collection: 'users',
+});
+
+UserSchema.index({ email: 1 });
+UserSchema.index({ sub: 1 });
+
+UserSchema.methods = {
+  isRedditTokenExpired(): boolean {
+    if (!this.redditAuth?.tokenExpiry) return true;
+    return new Date() > this.redditAuth.tokenExpiry;
+  },
+
+  isJiraTokenExpired(): boolean {
+    if (!this.jiraAuth?.tokenExpiry) return true;
+    return new Date() > this.jiraAuth.tokenExpiry;
+  },
+};
+
+UserSchema.statics = {
+  findBySub(sub: string) {
+    return this.findOne({ sub });
+  },
+  findByEmail(email: string) {
+    return this.findOne({ email: email.toLowerCase() });
+  },
+};
+
+UserSchema.pre('save', function(next) {
+  next();
+});
+
+const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
+
+export default User;

@@ -25,10 +25,8 @@ const ideaAgentHandler = createReactAgent({
   tools: [internetSearchTool],
 });
 
-// Model with structured output for parsing final response
 const structuredOutputModel = agentModel.withStructuredOutput(IdeaAnalysisSchema);
 
-// Define StateAnnotation
 const StateAnnotation = Annotation.Root({
   userQuery: Annotation<string>,
   researchData: Annotation<string>,
@@ -63,17 +61,12 @@ async function researchProblem(state: typeof StateAnnotation.State) {
   const lastMessage = result.messages[result.messages.length - 1];
   const researchData = lastMessage.content as string;
 
-  // Extract URLs/sources from Tavily's response
   const sources: string[] = [];
 
-  // Tavily returns results with URL field - extract from tool messages
   result.messages.forEach((msg: any) => {
-    // Check for tool messages (Tavily responses)
     if (msg._getType && msg._getType() === 'tool') {
       try {
         const toolContent = typeof msg.content === 'string' ? JSON.parse(msg.content) : msg.content;
-
-        // Tavily returns an array of results, each with a url field
         if (Array.isArray(toolContent)) {
           toolContent.forEach((item: any) => {
             if (item.url && !sources.includes(item.url)) {
@@ -82,13 +75,11 @@ async function researchProblem(state: typeof StateAnnotation.State) {
           });
         }
       } catch (e) {
-        // If not JSON, try to extract URLs from text
         console.log("Could not parse tool message as JSON, extracting URLs from text");
       }
     }
   });
 
-  // Also extract URLs from the final response text as fallback
   const urlRegex = /https?:\/\/[^\s\)>\]]+/gi;
   const urlsInText = researchData.match(urlRegex) || [];
   urlsInText.forEach(url => {
@@ -145,8 +136,6 @@ async function analyzeAndStructure(state: typeof StateAnnotation.State) {
     ]);
 
     console.log("4. Analysis completed:", analysis);
-
-    // Ensure sources are included (fallback if model doesn't provide them)
     if (!analysis.sources || analysis.sources.length === 0) {
       analysis.sources = state.sources.length > 0 ? state.sources : ["General knowledge and research principles"];
     }
@@ -155,7 +144,6 @@ async function analyzeAndStructure(state: typeof StateAnnotation.State) {
   } catch (error) {
     console.error("Error in analyzeAndStructure:", error);
 
-    // Fallback response
     const fallbackAnalysis: IdeaAnalysis = {
       title: "Problem Analysis: " + state.userQuery.substring(0, 50),
       summary: state.researchData || "Unable to complete analysis. Please try again.",
@@ -171,7 +159,7 @@ async function analyzeAndStructure(state: typeof StateAnnotation.State) {
   }
 }
 
-// Create the workflow
+// agent workflow
 const agentWorkflow = new StateGraph(StateAnnotation)
   .addNode("researchProblem", researchProblem)
   .addNode("analyzeAndStructure", analyzeAndStructure)
@@ -180,7 +168,6 @@ const agentWorkflow = new StateGraph(StateAnnotation)
   .addEdge("analyzeAndStructure", "__end__")
   .compile();
 
-// Main export function
 export async function analyzeIdea(query: string): Promise<IdeaAnalysis> {
   console.log("Starting idea analysis for query:", query);
 
