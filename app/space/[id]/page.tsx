@@ -57,6 +57,10 @@ export default async function SpacePage({
         ...spaceData.storyAgent,
         generatedAt: spaceData.storyAgent.generatedAt?.toISOString(),
       } : undefined,
+      emailAgent: spaceData.emailAgent ? {
+        ...spaceData.emailAgent,
+        generatedAt: spaceData.emailAgent.generatedAt?.toISOString(),
+      } : undefined,
     };
     
     console.log('[Space Page] Loaded space from MongoDB:');

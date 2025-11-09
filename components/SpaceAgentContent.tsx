@@ -3,6 +3,7 @@
 import { useState } from "react";
 import IdeaAgentView from "./IdeaAgentView";
 import StoryAgentView from "./StoryAgentView";
+import EmailAgentView from "./EmailAgentView";
 
 interface AgentStep {
   number: number;
@@ -18,6 +19,7 @@ interface Space {
   completed: boolean;
   ideaAgent?: any;
   storyAgent?: any;
+  emailAgent?: any;
   createdAt: string;
   updatedAt: string;
 }
@@ -62,6 +64,20 @@ export default function SpaceAgentContent({ space: initialSpace, agentSteps, vie
             spaceId={space._id}
             selectedSolution={selectedSolution || null}
             storyAgentData={(space as any).storyAgent || null}
+            onComplete={handleAgentComplete}
+            isViewingPastStep={viewStep !== null && viewStep < space.currentStep}
+          />
+        );
+      
+      case 3:
+        const emailSelectedSolution = (space.ideaAgent as any)?.selectedSolution;
+        console.log('[SpaceAgentContent] Step 3 - Selected solution:', emailSelectedSolution);
+        
+        return (
+          <EmailAgentView
+            spaceId={space._id}
+            selectedSolution={emailSelectedSolution || null}
+            emailAgentData={(space as any).emailAgent || null}
             onComplete={handleAgentComplete}
             isViewingPastStep={viewStep !== null && viewStep < space.currentStep}
           />
