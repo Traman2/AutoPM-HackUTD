@@ -1,7 +1,8 @@
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { z } from "zod";
-import { analyzeOKR } from "../okr/tools";
 import { analyzeIdea } from "../search/tools";
+import { analyzeOKR } from "../okr/tools";
+import { HumanMessage } from "@langchain/core/messages";
 
 // Schema for the comprehensive JSON output
 export const ComprehensiveAnalysisSchema = z.object({
@@ -97,23 +98,45 @@ export const ComprehensiveAnalysisSchema = z.object({
 
 export type ComprehensiveAnalysis = z.infer<typeof ComprehensiveAnalysisSchema>;
 
+// Space context interface
+interface SpaceContext {
+  spaceName: string;
+  problemStatement: string;
+  currentStep: number;
+  completed: boolean;
+  ideaAgent?: any;
+  storyAgent?: any;
+  emailAgent?: any;
+  riceAgent?: any;
+  okrAgent?: any;
+  wireframeAgent?: any;
+  jiraAgent?: any;
+}
+
 // Main orchestration function
-export async function orchestrateAnalysis(prompt: string): Promise<ComprehensiveAnalysis> {
+export async function orchestrateAnalysis(
+  prompt: string, 
+  pdfBuffer: Buffer, 
+  spaceContext?: SpaceContext
+): Promise<ComprehensiveAnalysis> {
   console.log("Starting comprehensive analysis orchestration for:", prompt);
 
   const startTime = new Date().toISOString();
   const sourcesUsed: string[] = [];
 
-  // Step 1: Get OKR analysis
-  console.log("1. Fetching OKR analysis...");
+  // Step 1: Get OKR analysis using the uploaded PDF
+  console.log("1. Analyzing OKR document...");
   let okrData = "";
   try {
-    okrData = await analyzeOKR(`How does "${prompt}" align with our current objectives and key results?`);
-    sourcesUsed.push("okr_agent");
+    okrData = await analyzeOKR(
+      `How does "${prompt}" align with our current objectives and key results? Please provide a detailed analysis of alignment, potential impact on OKRs, and strategic fit.`,
+      pdfBuffer
+    );
+    sourcesUsed.push("okr_document");
     console.log("   ✓ OKR analysis complete");
   } catch (error) {
     console.error("   ✗ OKR analysis failed:", error);
-    okrData = "OKR analysis unavailable";
+    okrData = "OKR analysis unavailable - could not process the uploaded document";
   }
 
   // Step 2: Get customer feedback search
@@ -152,8 +175,8 @@ export async function orchestrateAnalysis(prompt: string): Promise<Comprehensive
     console.error("   ✗ Competitor analysis failed:", error);
   }
 
-  // Step 5: Structure all data into JSON format using AI
-  console.log("5. Structuring data into JSON format...");
+  // Step 5: Structure all data into JSON format using AI with space context
+  console.log("5. Structuring data into JSON format with space context...");
   const structuredData = await structureDataToJSON(
     prompt,
     startTime,
@@ -161,11 +184,70 @@ export async function orchestrateAnalysis(prompt: string): Promise<Comprehensive
     okrData,
     feedbackData,
     newsData,
-    competitorData
+    competitorData,
+    spaceContext
   );
 
   console.log("6. Orchestration complete!");
   return structuredData;
+}
+
+// Helper function to build space context summary
+function buildSpaceContextSummary(spaceContext?: SpaceContext): string {
+  if (!spaceContext) {
+    return "No previous space context available.";
+  }
+
+  let summary = `\n=== SPACE CONTEXT ===\nSpace Name: ${spaceContext.spaceName}\nProblem Statement: ${spaceContext.problemStatement}\nCurrent Step: ${spaceContext.currentStep}\n\n`;
+
+  if (spaceContext.ideaAgent) {
+    summary += `**Idea Agent Output:**\n`;
+    summary += `Title: ${spaceContext.ideaAgent.title || 'N/A'}\n`;
+    summary += `Summary: ${spaceContext.ideaAgent.summary || 'N/A'}\n`;
+    summary += `Selected Solution: ${spaceContext.ideaAgent.selectedSolution || 'None'}\n\n`;
+  }
+
+  if (spaceContext.storyAgent?.storyMarkdown) {
+    const truncated = spaceContext.storyAgent.storyMarkdown.substring(0, 500);
+    summary += `**User Stories (excerpt):**\n${truncated}...\n\n`;
+  }
+
+  if (spaceContext.emailAgent) {
+    summary += `**Email Agent Output:**\n`;
+    summary += `Total Recipients: ${spaceContext.emailAgent.results?.length || 0}\n`;
+    summary += `Summary: ${spaceContext.emailAgent.summary || 'N/A'}\n\n`;
+  }
+
+  if (spaceContext.riceAgent) {
+    summary += `**RICE Agent Output:**\n`;
+    summary += `Features Analyzed: ${spaceContext.riceAgent.features?.length || 0}\n`;
+    if (spaceContext.riceAgent.analysis) {
+      const truncated = spaceContext.riceAgent.analysis.substring(0, 300);
+      summary += `Analysis (excerpt): ${truncated}...\n\n`;
+    }
+  }
+
+  if (spaceContext.okrAgent) {
+    summary += `**OKR Agent Output:**\n`;
+    if (spaceContext.okrAgent.summary) {
+      const truncated = spaceContext.okrAgent.summary.substring(0, 300);
+      summary += `Summary (excerpt): ${truncated}...\n\n`;
+    }
+  }
+
+  if (spaceContext.wireframeAgent?.pages) {
+    summary += `**Wireframe Agent Output:**\n`;
+    summary += `Pages Created: ${spaceContext.wireframeAgent.pages.length}\n`;
+    summary += `Pages: ${spaceContext.wireframeAgent.pages.map((p: any) => p.name).join(', ')}\n\n`;
+  }
+
+  if (spaceContext.jiraAgent) {
+    summary += `**Jira Agent Output:**\n`;
+    summary += `Tickets Created: ${spaceContext.jiraAgent.tickets?.length || 0}\n`;
+    summary += `Summary: ${spaceContext.jiraAgent.summary || 'N/A'}\n\n`;
+  }
+
+  return summary;
 }
 
 // Structure all collected data into the required JSON format
@@ -176,7 +258,8 @@ async function structureDataToJSON(
   okrData: string,
   feedbackData: any,
   newsData: any,
-  competitorData: any
+  competitorData: any,
+  spaceContext?: SpaceContext
 ): Promise<ComprehensiveAnalysis> {
   const model = new ChatGoogleGenerativeAI({
     model: "gemini-2.0-flash-exp",
@@ -186,9 +269,14 @@ async function structureDataToJSON(
 
   const structuredOutputModel = model.withStructuredOutput(ComprehensiveAnalysisSchema);
 
+  // Build space context summary
+  const contextSummary = buildSpaceContextSummary(spaceContext);
+
   const prompt_text = `You are a data analyst tasked with structuring research data into a comprehensive JSON format for visualization.
 
 ORIGINAL PROMPT: ${prompt}
+
+${contextSummary}
 
 DATA COLLECTED:
 
@@ -214,7 +302,9 @@ Solutions: ${competitorData.solutions.join(', ')}
 Sources: ${competitorData.sources.join(', ')}` : 'No data available'}
 
 INSTRUCTIONS:
-Create a comprehensive JSON structure following this exact schema. Use the research data above to populate all fields intelligently:
+Create a comprehensive JSON structure following this exact schema. Use the research data above AND the space context to populate all fields intelligently.
+
+**IMPORTANT**: Use the space context information to inform your analysis. If the space has previous work (ideas, user stories, features, wireframes, etc.), reference and build upon that context in your analysis. This will make the output more relevant and contextual to the user's ongoing project.
 
 1. **metadata**: Use provided timestamp "${timestamp}" and sources ${JSON.stringify(sources)}
 
@@ -319,9 +409,10 @@ Return a complete, valid JSON structure.`;
   }
 }
 
-// Example usage
-export async function exampleUsage() {
-  const result = await orchestrateAnalysis("AI-powered customer support chatbot");
+// Example usage - Note: In actual usage, you need to provide a PDF buffer
+// This is just a placeholder for reference
+export async function exampleUsage(pdfBuffer: Buffer) {
+  const result = await orchestrateAnalysis("AI-powered customer support chatbot", pdfBuffer);
   console.log(JSON.stringify(result, null, 2));
   return result;
 }

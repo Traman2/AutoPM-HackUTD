@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import SpacePageHeader from './SpacePageHeader';
 import ChatbotView from './ChatbotView';
+import MarketSearchView from './MarketSearchView';
 
 interface User {
   name?: string;
@@ -28,6 +29,7 @@ interface SpacePageClientProps {
 
 export default function SpacePageClient({ user, space, totalSteps, children }: SpacePageClientProps) {
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+  const [isMarketSearchOpen, setIsMarketSearchOpen] = useState(false);
 
   return (
     <>
@@ -36,12 +38,18 @@ export default function SpacePageClient({ user, space, totalSteps, children }: S
         space={space}
         totalSteps={totalSteps}
         onOpenChatbot={() => setIsChatbotOpen(true)}
+        onOpenMarketSearch={() => setIsMarketSearchOpen(true)}
       />
       {children}
       <ChatbotView
         spaceId={space._id}
         isOpen={isChatbotOpen}
         onClose={() => setIsChatbotOpen(false)}
+      />
+      <MarketSearchView
+        spaceId={space._id}
+        isOpen={isMarketSearchOpen}
+        onClose={() => setIsMarketSearchOpen(false)}
       />
     </>
   );
