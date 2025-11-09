@@ -44,33 +44,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-export async function GET() {
-  return NextResponse.json({
-    message: 'RICE Prioritization API',
-    description: 'Calculates RICE scores and provides AI-powered prioritization analysis',
-    usage: {
-      method: 'POST',
-      endpoint: '/api/agents/rice',
-      contentType: 'application/json',
-      body: {
-        features: [
-          {
-            name: 'Feature name',
-            reach: 10000,
-            impact: 2.0,
-            confidence: 0.8,
-            effort: 15
-          }
-        ]
-      },
-      note: 'Features array is required and must contain at least one feature'
-    },
-    fields: {
-      reach: 'Number of users affected per time period',
-      impact: '3=massive, 2=high, 1=medium, 0.5=low, 0.25=minimal',
-      confidence: 'Confidence level from 0.0 to 1.0 (e.g., 0.8 = 80%)',
-      effort: 'Effort in person-months or story points'
-    }
-  });
-}

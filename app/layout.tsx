@@ -7,8 +7,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Auth0 Next.js App",
-  description: "Next.js app with Auth0 authentication",
+  title: "Product Workspace - AI-Powered Product Management",
+  description: "Create and manage product ideation workflows with AI-powered agents",
 };
 
 export default function RootLayout({

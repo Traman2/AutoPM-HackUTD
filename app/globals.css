@@ -4,39 +4,57 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(0.99 0 0);
-  --foreground: oklch(0.15 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0 0);
-  --primary: oklch(0.38 0.15 262);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.96 0.01 262);
-  --secondary-foreground: oklch(0.15 0 0);
-  --muted: oklch(0.96 0.01 262);
-  --muted-foreground: oklch(0.5 0.02 262);
-  --accent: oklch(0.38 0.15 262);
-  --accent-foreground: oklch(0.99 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.9 0.01 262);
-  --input: oklch(0.9 0.01 262);
-  --ring: oklch(0.38 0.15 262);
-  --chart-1: oklch(0.55 0.2 262);
-  --chart-2: oklch(0.65 0.15 200);
-  --chart-3: oklch(0.7 0.12 150);
-  --chart-4: oklch(0.75 0.18 80);
-  --chart-5: oklch(0.6 0.2 320);
-  --radius: 0.5rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* Rose/Mauve Primary Colors */
+  --primary: #9B6B7A;
+  --primary-hover: #8A5A69;
+  --primary-light: #B98999;
+  --primary-ultralight: rgba(155, 107, 122, 0.08);
+
+  /* Backgrounds */
+  --background: #F5F5F7;
+  --background-secondary: #FAFAFA;
+  --card: #FFFFFF;
+  --foreground: #1A1A1A;
+  --card-foreground: #1A1A1A;
+
+  /* Borders */
+  --border: #E5E5E5;
+  --border-hover: #D4D4D4;
+  --border-focus: #9B6B7A;
+
+  /* Text Colors */
+  --text-primary: #1A1A1A;
+  --text-secondary: #6B6B6B;
+  --text-tertiary: #9CA3AF;
+  --text-placeholder: #D1D5DB;
+
+  /* Status Colors */
+  --success: #10B981;
+  --success-light: #D1FAE5;
+  --warning: #F59E0B;
+  --warning-light: #FEF3C7;
+  --info: #3B82F6;
+  --info-light: #DBEAFE;
+  --error: #EF4444;
+  --error-light: #FEE2E2;
+
+  /* Department Colors */
+  --dept-design: #8B5CF6;
+  --dept-engineering: #F97316;
+  --dept-product: #3B82F6;
+  --dept-marketing: #10B981;
+
+  --radius: 0.75rem;
+  --popover: #FFFFFF;
+  --popover-foreground: #1A1A1A;
+  --input: #FFFFFF;
+  --ring: #9B6B7A;
+  --muted: #F5F5F7;
+  --muted-foreground: #6B6B6B;
+  --accent: #9B6B7A;
+  --accent-foreground: #FFFFFF;
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
 }
 
 .dark {

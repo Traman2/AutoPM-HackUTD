@@ -42,17 +42,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-export async function GET() {
-  return NextResponse.json({
-    message: 'User Story Generator API',
-    description: 'Generates user stories with acceptance criteria, NFRs, and telemetry plan from epic descriptions',
-    usage: {
-      method: 'POST',
-      endpoint: '/api/agents/story',
-      body: {
-        epic: 'Your epic description here (e.g., "As a university, we want to provide students with...")'
-      }
-    }
-  });
-}

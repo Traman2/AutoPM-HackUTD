@@ -75,26 +75,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-export async function GET() {
-  return NextResponse.json({
-    message: 'OKR Analysis API (RAG-powered)',
-    description: 'Upload an OKR PDF document and ask questions about it',
-    usage: {
-      method: 'POST',
-      endpoint: '/api/agents/okr',
-      contentType: 'multipart/form-data',
-      formData: {
-        file: 'PDF file (required)',
-        question: 'Your question about the OKR document (required unless action is "summary")',
-        action: 'Optional: "summary" to get full document summary'
-      }
-    },
-    examples: [
-      'What are the main objectives for Q1 2025?',
-      'What are the key results for the Sales team?',
-      'What is the target revenue growth?',
-      'Which departments are mentioned in the document?'
-    ]
-  });
-}
