@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "WebFetch(domain:www.reddit.com)",
+      "WebFetch(domain:developer.atlassian.com)",
+      "WebSearch",
+      "WebFetch(domain:vercel.com)",
+      "Bash(npm install:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

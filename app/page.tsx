@@ -1,35 +1,14 @@
-'use client';
+import { auth0 } from "@/lib/auth0";
+import { redirect } from "next/navigation";
 
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+export default async function Home() {
+  const session = await auth0.getSession();
+  const user = session?.user;
 
-export default function DashboardPage() {
-  const [message, setMessage] = useState('');
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    axios.get('/api/hello')
-      .then((response) => {
-        setMessage(response.data.message);
-      })
-      .catch((error) => {
-        console.error('Error fetching hello:', error);
-        setMessage('Error loading message');
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
-
-  return (
-    <div className="">
-      <main className="">
-        {loading ? (
-          <p>Loading...</p>
-        ) : (
-          <p>{message}</p>
-        )}
-      </main>
-    </div>
-  );
+  // Redirect based on authentication status
+  if (user) {
+    redirect("/dashboard");
+  } else {
+    redirect("/login");
+  }
 }
