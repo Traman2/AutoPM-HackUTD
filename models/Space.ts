@@ -81,9 +81,40 @@ interface IOKRAgentData {
 // WIREFRAME AGENT DATA
 // ============================================
 // Schema from: app/api/agents/wireframe/tools.ts
-// Returns: HTML string
+// Returns: Array of HTML pages
+interface IWireframePage {
+  name: string;         // Page name (e.g., "Landing Page", "Dashboard")
+  description: string;  // Brief description of the page
+  html: string;        // Complete HTML code
+}
+
 interface IWireframeAgentData {
-  html?: string;  // Complete HTML wireframe
+  pages?: IWireframePage[];  // Array of wireframe pages
+  generatedAt?: Date;
+}
+
+// ============================================
+// JIRA AGENT DATA
+// ============================================
+// Schema from: app/api/agents/jiraAgent/tools.ts
+// Returns: Project info and created tickets
+interface IJiraTicket {
+  id: string;
+  key: string;
+  summary: string;
+  description: string;
+  assignee?: string;
+  status: string;
+}
+
+interface IJiraAgentData {
+  projectKey?: string;
+  projectName?: string;
+  projectUrl?: string;
+  invitedUsers?: number;
+  ticketsCreated?: number;
+  tickets?: IJiraTicket[];
+  summary?: string;
   generatedAt?: Date;
 }
 
@@ -94,9 +125,9 @@ export interface ISpace extends Document {
   userId: string; // Auth0 sub
   name: string;
   problemStatement: string;
-  currentStep: number; // 1-6 (Idea, Story, Email, RICE, OKR, Wireframe)
+  currentStep: number; // 1-7 (Idea, Story, Email, RICE, OKR, Wireframe, Jira)
   completed: boolean;
-  
+
   // Agent workflow data - each step stores its exact output
   ideaAgent?: IIdeaAgentData;
   storyAgent?: IStoryAgentData;
@@ -104,7 +135,8 @@ export interface ISpace extends Document {
   riceAgent?: IRICEAgentData;
   okrAgent?: IOKRAgentData;
   wireframeAgent?: IWireframeAgentData;
-  
+  jiraAgent?: IJiraAgentData;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -168,8 +200,34 @@ const OKRAgentDataSchema = new Schema<IOKRAgentData>({
   generatedAt: Date,
 }, { _id: false });
 
+const WireframePageSchema = new Schema<IWireframePage>({
+  name: { type: String, required: true },
+  description: { type: String, required: true },
+  html: { type: String, required: true },
+}, { _id: false });
+
 const WireframeAgentDataSchema = new Schema<IWireframeAgentData>({
-  html: String,
+  pages: [WireframePageSchema],
+  generatedAt: Date,
+}, { _id: false });
+
+const JiraTicketSchema = new Schema<IJiraTicket>({
+  id: { type: String, required: true },
+  key: { type: String, required: true },
+  summary: { type: String, required: true },
+  description: { type: String, required: true },
+  assignee: String,
+  status: { type: String, required: true },
+}, { _id: false });
+
+const JiraAgentDataSchema = new Schema<IJiraAgentData>({
+  projectKey: String,
+  projectName: String,
+  projectUrl: String,
+  invitedUsers: Number,
+  ticketsCreated: Number,
+  tickets: [JiraTicketSchema],
+  summary: String,
   generatedAt: Date,
 }, { _id: false });
 
@@ -201,7 +259,7 @@ const SpaceSchema = new Schema<ISpace>({
     type: Number,
     default: 1,
     min: 1,
-    max: 6,
+    max: 7,
   },
   completed: {
     type: Boolean,
@@ -231,6 +289,10 @@ const SpaceSchema = new Schema<ISpace>({
   },
   wireframeAgent: {
     type: WireframeAgentDataSchema,
+    default: undefined,
+  },
+  jiraAgent: {
+    type: JiraAgentDataSchema,
     default: undefined,
   },
 }, {

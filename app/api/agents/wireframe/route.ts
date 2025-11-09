@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateWireframe } from './tools';
+import { generateWireframes, generateWireframe } from './tools';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { prompt } = body;
+    const { solution, prompt, multiple } = body;
 
-    if (!prompt) {
+    // Support both new (solution/multiple) and legacy (prompt/single) modes
+    const inputText = solution || prompt;
+
+    if (!inputText) {
       return NextResponse.json(
-        { error: 'Prompt is required' },
+        { error: 'Solution or prompt is required' },
         { status: 400 }
       );
     }
@@ -21,16 +24,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('Generating wireframe for prompt:', prompt);
-    const html = await generateWireframe(prompt);
-
-    return NextResponse.json({
-      success: true,
-      html,
-      message: 'Wireframe generated successfully'
-    });
+    // Generate multiple pages by default, or single page if explicitly requested
+    if (multiple === false || prompt) {
+      console.log('[Wireframe API] Generating single wireframe for:', inputText.substring(0, 50) + '...');
+      const html = await generateWireframe(inputText);
+      return NextResponse.json({
+        success: true,
+        html,
+        message: 'Wireframe generated successfully'
+      });
+    } else {
+      console.log('[Wireframe API] Generating multiple wireframes for solution:', inputText.substring(0, 50) + '...');
+      const pages = await generateWireframes(inputText);
+      return NextResponse.json({
+        success: true,
+        pages,
+        message: `${pages.length} wireframe pages generated successfully`
+      });
+    }
   } catch (error) {
-    console.error('Error generating wireframe:', error);
+    console.error('[Wireframe API] Error:', error);
     return NextResponse.json(
       {
         success: false,

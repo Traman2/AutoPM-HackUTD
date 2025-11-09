@@ -3,35 +3,127 @@ import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { z } from "zod";
 import { HumanMessage } from "@langchain/core/messages";
 
+// Page interface
+export interface WireframePage {
+  name: string;
+  description: string;
+  html: string;
+}
+
+// Zod schema for wireframe output
+export const WireframePageSchema = z.object({
+  name: z.string().describe("Name of the page (e.g., 'Landing Page', 'Dashboard', 'Login')"),
+  description: z.string().describe("Brief description of what this page shows"),
+  html: z.string().describe("Complete HTML code for the page"),
+});
+
+export const WireframeOutputSchema = z.object({
+  pages: z.array(WireframePageSchema).describe("Array of wireframe pages for the product"),
+});
+
 // Create the wireframe generator tool using LangGraph
 export const createWireframeGeneratorTool = () => {
   return new DynamicStructuredTool({
     name: "wireframe_generator",
-    description: "Generates an HTML wireframe page based on a user's idea or prompt. Creates a complete, styled HTML page with modern CSS that represents the wireframe of the concept.",
+    description: "Generates multiple HTML wireframe pages based on a product solution. Creates a complete set of styled HTML pages with modern CSS that represents key screens of the product.",
     schema: z.object({
-      prompt: z.string().describe("The user's idea or description of what they want to create as a wireframe"),
+      solution: z.string().describe("The product solution to create wireframes for"),
     }),
-    func: async ({ prompt }) => {
+    func: async ({ solution }) => {
       try {
-        const htmlWireframe = await generateWireframeWithLangGraph(prompt);
+        const pages = await generateMultipleWireframes(solution);
         return JSON.stringify({
           success: true,
-          html: htmlWireframe,
-          message: "HTML wireframe generated successfully"
+          pages,
+          message: "HTML wireframes generated successfully"
         });
       } catch (error) {
         return JSON.stringify({
           success: false,
           error: error instanceof Error ? error.message : "Unknown error occurred",
-          message: "Failed to generate wireframe"
+          message: "Failed to generate wireframes"
         });
       }
     },
   });
 };
 
-// Simplified wireframe generation (no LangGraph complexity needed)
-async function generateWireframeWithLangGraph(userPrompt: string): Promise<string> {
+// Generate multiple wireframes for different pages
+async function generateMultipleWireframes(solution: string): Promise<WireframePage[]> {
+  console.log('[Wireframe Agent] Generating multiple pages for solution:', solution.substring(0, 100) + '...');
+
+  const model = new ChatGoogleGenerativeAI({
+    model: "gemini-2.0-flash-exp",
+    temperature: 0.7,
+    apiKey: process.env.GOOGLE_API_KEY,
+  });
+
+  // First, determine what pages are needed
+  const planningPrompt = `You are a product designer. Based on this product solution, determine what key pages/screens should be wireframed.
+
+SOLUTION:
+${solution}
+
+Return a JSON array of page objects, each with:
+- name: string (e.g., "Landing Page", "Dashboard", "Login Page", "Settings")
+- description: string (brief description of what this page shows)
+
+Typical pages might include:
+- Landing Page (marketing/public)
+- Login/Signup Page
+- Dashboard/Home (main authenticated view)
+- Feature-specific pages (based on the solution)
+- Settings/Profile page
+- Admin panel (if applicable)
+
+Return 3-5 pages that make sense for this product. Return ONLY valid JSON, no markdown, no explanations.
+
+Example format:
+[
+  {"name": "Landing Page", "description": "Public marketing page showcasing the product"},
+  {"name": "Dashboard", "description": "Main user interface after login"}
+]`;
+
+  const planningResponse = await model.invoke([new HumanMessage(planningPrompt)]);
+  let planningContent = planningResponse.content as string;
+
+  // Extract JSON from markdown code blocks if present
+  const jsonMatch = planningContent.match(/```(?:json)?\s*(\[[\s\S]*?\])\s*```/);
+  if (jsonMatch) {
+    planningContent = jsonMatch[1];
+  }
+
+  let pagePlans: Array<{ name: string; description: string }>;
+  try {
+    pagePlans = JSON.parse(planningContent.trim());
+    console.log('[Wireframe Agent] Planning to generate', pagePlans.length, 'pages');
+  } catch (error) {
+    console.error('[Wireframe Agent] Failed to parse page plans, using defaults');
+    pagePlans = [
+      { name: "Landing Page", description: "Public marketing page" },
+      { name: "Login Page", description: "User authentication" },
+      { name: "Dashboard", description: "Main user interface" },
+    ];
+  }
+
+  // Generate HTML for each page
+  const pages: WireframePage[] = [];
+  for (const plan of pagePlans) {
+    console.log(`[Wireframe Agent] Generating ${plan.name}...`);
+    const html = await generateSingleWireframe(solution, plan.name, plan.description);
+    pages.push({
+      name: plan.name,
+      description: plan.description,
+      html,
+    });
+  }
+
+  console.log('[Wireframe Agent] Successfully generated', pages.length, 'pages');
+  return pages;
+}
+
+// Generate a single wireframe page
+async function generateSingleWireframe(solution: string, pageName: string, pageDescription: string): Promise<string> {
   // Initialize the Gemini model
   const model = new ChatGoogleGenerativeAI({
     model: "gemini-2.0-flash-exp",
@@ -39,7 +131,14 @@ async function generateWireframeWithLangGraph(userPrompt: string): Promise<strin
     apiKey: process.env.GOOGLE_API_KEY,
   });
 
-  const systemPrompt = `You are an expert UI/UX designer and front-end developer specializing in creating beautiful, modern web designs. Create a stunning, fully-styled HTML wireframe that looks professional and visually appealing.
+  const systemPrompt = `You are an expert UI/UX designer and front-end developer specializing in creating beautiful, modern web designs. Create a stunning, fully-styled HTML wireframe for a specific page of a product.
+
+PRODUCT SOLUTION:
+${solution}
+
+PAGE TO CREATE:
+Name: ${pageName}
+Description: ${pageDescription}
 
 CRITICAL INSTRUCTIONS - YOU MUST FOLLOW THESE EXACTLY:
 1. Return ONLY raw HTML code - nothing else
@@ -71,19 +170,40 @@ Visual Design:
 Layout & Spacing:
 - Generous whitespace and padding (sections: 80-120px vertical, cards: 32-48px)
 - Use CSS Grid and Flexbox for modern, responsive layouts
-- Container max-width: 1200px with auto margins
+- Container max-width: 1200px with auto margins for content pages, full width for dashboards
 - Consistent spacing scale: 8px, 16px, 24px, 32px, 48px, 64px, 80px
 
-Components to Include (based on request):
-- Hero sections with gradient backgrounds and large, bold typography
-- Cards with shadows, rounded corners, and hover effects
-- Buttons with gradients, shadows, and hover animations
-- Icons using simple SVG shapes or unicode symbols (→, ✓, ★, etc.)
-- Feature grids with 2-4 columns
-- Testimonials with avatars (use colored circles with initials)
-- Pricing tables with highlighted popular option
-- Call-to-action sections with contrasting backgrounds
+Page-Specific Guidelines:
+
+FOR LANDING PAGES:
+- Hero section with gradient background and large, bold typography
+- Feature grids with 2-4 columns and icons
+- Testimonials with avatars
+- Pricing tables (if relevant)
+- Call-to-action sections
 - Footer with multiple columns
+
+FOR LOGIN/SIGNUP PAGES:
+- Centered card with form fields
+- Email and password inputs with proper styling
+- Social login buttons (if relevant)
+- Links to forgot password and sign up
+- Minimal, focused design
+
+FOR DASHBOARDS:
+- Sidebar navigation (fixed left, ~240px)
+- Top navigation bar with user profile
+- Main content area with stats cards and charts placeholders
+- Data tables with proper styling
+- Action buttons and filters
+- Use card-based layout for different sections
+
+FOR SETTINGS/PROFILE PAGES:
+- Two-column layout (navigation sidebar + content)
+- Form sections with clear labels
+- Toggle switches, dropdowns, and inputs
+- Save/Cancel buttons
+- Profile picture upload area
 
 Modern Effects & Details:
 - Add subtle hover effects (transform: translateY(-4px), increased shadows)
@@ -100,10 +220,9 @@ Technical Requirements:
 - Fully responsive with mobile-first approach
 - No external dependencies or CDN links
 - Cross-browser compatible CSS
+- Include realistic placeholder content relevant to the product solution
 
-User Request: ${userPrompt}
-
-IMPORTANT: Make it VISUALLY STUNNING. This should look like a modern, professional website from 2024/2025, not a basic wireframe. Use colors, gradients, shadows, and spacing to create visual hierarchy and beauty. Think Stripe, Linear, Vercel, or Tailwind CSS showcase quality.
+IMPORTANT: Make it VISUALLY STUNNING and contextually relevant to both the product solution and the specific page type. This should look like a modern, professional website from 2024/2025. Use colors, gradients, shadows, and spacing to create visual hierarchy and beauty. Think Stripe, Linear, Vercel, or Tailwind CSS showcase quality.
 
 Remember: Output must start with <!DOCTYPE html> and contain NOTHING before or after the HTML code.`;
 
@@ -148,19 +267,14 @@ Remember: Output must start with <!DOCTYPE html> and contain NOTHING before or a
   return htmlContent;
 }
 
-// Export a simple API handler function
+// Export the main function
+export async function generateWireframes(solution: string): Promise<WireframePage[]> {
+  return generateMultipleWireframes(solution);
+}
+
+// Legacy function for backward compatibility
 export async function generateWireframe(prompt: string): Promise<string> {
-  return generateWireframeWithLangGraph(prompt);
+  const pages = await generateMultipleWireframes(prompt);
+  return pages[0]?.html || '';
 }
 
-// Example usage function for testing
-export async function exampleUsage() {
-  const tool = createWireframeGeneratorTool();
-
-  const result = await tool.invoke({
-    prompt: "Create a landing page for a SaaS product with a hero section, features grid, pricing table, and footer"
-  });
-
-  console.log(result);
-  return result;
-}

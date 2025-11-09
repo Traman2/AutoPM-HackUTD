@@ -15,6 +15,11 @@ interface IJiraAuth {
   tokenExpiry?: Date;
   scopes?: string[];
   cloudId?: string; // Atlassian cloud ID for API requests
+
+  // Simple API Token Method (Recommended for personal use)
+  email?: string; // Jira account email
+  apiToken?: string; // API token from Atlassian
+  domain?: string; // Jira domain (e.g., company.atlassian.net)
 }
 
 interface IGoogleAuth {

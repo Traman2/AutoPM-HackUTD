@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import connectDB from "@/lib/mongodb";
 import Space from "@/models/Space";
 import Link from "next/link";
-import SpacePageHeader from "@/components/SpacePageHeader";
+import SpacePageClient from "@/components/SpacePageClient";
 import SpaceAgentContent from "@/components/SpaceAgentContent";
 
 export default async function SpacePage({ 
@@ -69,16 +69,60 @@ export default async function SpacePage({
         ...spaceData.okrAgent,
         generatedAt: spaceData.okrAgent.generatedAt?.toISOString(),
       } : undefined,
+      // Wireframe agent - retrieve HTML strings from MongoDB for iframe rendering
+      wireframeAgent: spaceData.wireframeAgent ? {
+        pages: spaceData.wireframeAgent.pages?.map((page: any) => ({
+          name: page.name,
+          description: page.description,
+          html: page.html, // Ensure HTML string is passed
+        })) || [],
+        generatedAt: spaceData.wireframeAgent.generatedAt?.toISOString(),
+      } : undefined,
+      // Jira agent - retrieve project and ticket data
+      jiraAgent: spaceData.jiraAgent ? {
+        projectKey: spaceData.jiraAgent.projectKey,
+        projectName: spaceData.jiraAgent.projectName,
+        projectUrl: spaceData.jiraAgent.projectUrl,
+        invitedUsers: spaceData.jiraAgent.invitedUsers,
+        ticketsCreated: spaceData.jiraAgent.ticketsCreated,
+        tickets: spaceData.jiraAgent.tickets || [],
+        summary: spaceData.jiraAgent.summary,
+        generatedAt: spaceData.jiraAgent.generatedAt?.toISOString(),
+      } : undefined,
     };
     
     console.log('[Space Page] Loaded space from MongoDB:');
     console.log('[Space Page] - ideaAgent exists:', !!spaceData.ideaAgent);
     console.log('[Space Page] - selectedSolution:', spaceData.ideaAgent?.selectedSolution);
     console.log('[Space Page] - solutions count:', spaceData.ideaAgent?.solutions?.length);
+    console.log('[Space Page] - wireframeAgent exists:', !!spaceData.wireframeAgent);
+    console.log('[Space Page] - wireframeAgent pages count:', spaceData.wireframeAgent?.pages?.length || 0);
+    if (spaceData.wireframeAgent?.pages && spaceData.wireframeAgent.pages.length > 0) {
+      console.log('[Space Page] - Retrieved HTML pages from MongoDB for iframe rendering');
+      spaceData.wireframeAgent.pages.forEach((page: any, index: number) => {
+        console.log(`[Space Page]   Page ${index + 1}: ${page.name} (${page.html?.length || 0} chars)`);
+      });
+    } else {
+      console.log('[Space Page] - NO wireframe pages found in MongoDB');
+    }
   } catch (error) {
     console.error('Failed to fetch space:', error);
     redirect("/dashboard");
   }
+
+  // Helper function to check if a step has actual data
+  const hasStepData = (stepNumber: number): boolean => {
+    switch (stepNumber) {
+      case 1: return !!(space.ideaAgent?.solutions && space.ideaAgent.solutions.length > 0);
+      case 2: return !!(space.storyAgent?.storyMarkdown);
+      case 3: return !!(space.emailAgent?.results && space.emailAgent.results.length > 0);
+      case 4: return !!(space.riceAgent?.features && space.riceAgent.features.length > 0);
+      case 5: return !!(space.okrAgent?.summary || space.okrAgent?.analysis);
+      case 6: return !!(space.wireframeAgent?.pages && space.wireframeAgent.pages.length > 0);
+      case 7: return !!(space.jiraAgent?.tickets && space.jiraAgent.tickets.length > 0);
+      default: return false;
+    }
+  };
 
   const agentSteps = [
     {
@@ -135,15 +179,37 @@ export default async function SpacePage({
         </svg>
       ),
     },
+    {
+      number: 7,
+      name: 'Jira Tickets',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        </svg>
+      ),
+    },
   ];
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#F5F5F7' }}>
-      {/* Top Navigation Bar */}
-      <SpacePageHeader user={user} space={space} totalSteps={agentSteps.length} />
-
-      {/* Main Content - Two Panel Layout */}
-      <div className="flex max-w-[1600px] mx-auto">
+      <SpacePageClient
+        user={{
+          name: user.name,
+          email: user.email,
+          picture: user.picture,
+          nickname: user.nickname,
+          sub: user.sub,
+        }}
+        space={{
+          _id: space._id,
+          name: space.spaceName,
+          currentStep: space.currentStep,
+          completed: space.completed,
+        }}
+        totalSteps={agentSteps.length}
+      >
+        {/* Main Content - Two Panel Layout */}
+        <div className="flex max-w-[1600px] mx-auto">
         {/* Left Panel - Agent Pipeline */}
         <aside className="w-80 bg-white border-r shrink-0" style={{ borderColor: '#E5E5E5', minHeight: 'calc(100vh - 64px)' }}>
           <div className="p-6">
@@ -160,19 +226,35 @@ export default async function SpacePage({
             <div className="mb-6">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium" style={{ color: '#6B6B6B' }}>Progress</span>
-                <span className="text-xs font-semibold" style={{ color: '#9B6B7A' }}>
-                  {Math.round(((space.currentStep - 1) / agentSteps.length) * 100)}%
+                <span className="text-xs font-semibold" style={{ color: space.completed ? '#10B981' : '#9B6B7A' }}>
+                  {(() => {
+                    const completedSteps = agentSteps.filter(step => hasStepData(step.number)).length;
+                    const progressPercent = Math.round((completedSteps / agentSteps.length) * 100);
+                    return space.completed ? '100%' : `${progressPercent}%`;
+                  })()}
                 </span>
               </div>
               <div className="h-2 rounded-full" style={{ backgroundColor: '#E5E5E5' }}>
                 <div
                   className="h-full rounded-full transition-all duration-300"
                   style={{
-                    backgroundColor: '#9B6B7A',
-                    width: `${((space.currentStep - 1) / agentSteps.length) * 100}%`,
+                    backgroundColor: space.completed ? '#10B981' : '#9B6B7A',
+                    width: (() => {
+                      if (space.completed) return '100%';
+                      const completedSteps = agentSteps.filter(step => hasStepData(step.number)).length;
+                      return `${(completedSteps / agentSteps.length) * 100}%`;
+                    })(),
                   }}
                 />
               </div>
+              {space.completed && (
+                <div className="flex items-center gap-1.5 mt-2 px-2 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: '#D1FAE5', color: '#065F46' }}>
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Workflow Complete
+                </div>
+              )}
             </div>
 
             {/* Problem Statement */}
@@ -191,10 +273,22 @@ export default async function SpacePage({
             {/* Agent Steps */}
             <div className="space-y-2">
               {agentSteps.map((step) => {
-                const isCompleted = step.number < space.currentStep;
-                const isPending = step.number > space.currentStep;
-                const isClickable = isCompleted || step.number === space.currentStep;
-                
+                // Check if this step has actual data (truly completed)
+                const hasData = hasStepData(step.number);
+
+                // A step is completed if it has data OR if we've moved past it
+                const isCompleted = hasData || step.number < space.currentStep;
+
+                // A step is pending if it has no data AND we haven't reached it yet
+                const isPending = !hasData && step.number > space.currentStep;
+
+                // A step is clickable if:
+                // 1. It has data (can revisit)
+                // 2. It's the current step
+                // 3. The previous step has data (can proceed)
+                const prevStepComplete = step.number === 1 || hasStepData(step.number - 1);
+                const isClickable = hasData || step.number === space.currentStep || prevStepComplete;
+
                 // Determine if this is the active viewed step
                 const isActiveView = viewStep ? step.number === viewStep : step.number === space.currentStep;
 
@@ -249,7 +343,8 @@ export default async function SpacePage({
         <main className="flex-1 p-4">
           <SpaceAgentContent space={space} agentSteps={agentSteps} viewStep={viewStep} />
         </main>
-      </div>
+        </div>
+      </SpacePageClient>
     </div>
   );
 }
