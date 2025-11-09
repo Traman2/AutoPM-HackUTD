@@ -11,6 +11,7 @@
   "dependencies": {
     "@auth0/nextjs-auth0": "^4.12.0",
     "@hookform/resolvers": "^3.10.0",
+    "@iconify/react": "^6.0.2",
     "@langchain/community": "^1.0.0",
     "@langchain/core": "^1.0.3",
     "@langchain/google-genai": "^1.0.0",

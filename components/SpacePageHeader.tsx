@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { Icon } from "@iconify/react";
 import ProfileDropdown from "./ProfileDropdown";
-import { MessageCircle } from "lucide-react";
 
 interface User {
   name?: string;
@@ -40,9 +40,7 @@ export default function SpacePageHeader({ user, space, totalSteps, onOpenChatbot
             className="flex items-center gap-2 text-sm transition-colors hover:opacity-80"
             style={{ color: 'var(--text-secondary)' }}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
+            <Icon icon="solar:alt-arrow-left-linear" width="16" height="16" />
             Back
           </Link>
 
@@ -54,7 +52,8 @@ export default function SpacePageHeader({ user, space, totalSteps, onOpenChatbot
               style={{
                 backgroundColor: 'var(--primary)',
                 borderRadius: 'var(--radius)',
-                boxShadow: 'var(--shadow-sm)'
+                boxShadow: 'var(--shadow-sm)',
+                fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = 'var(--primary-hover)';
@@ -67,7 +66,7 @@ export default function SpacePageHeader({ user, space, totalSteps, onOpenChatbot
                 e.currentTarget.style.transform = 'translateY(0)';
               }}
             >
-              <MessageCircle className="w-4 h-4" />
+              <Icon icon="solar:chat-round-dots-bold" width="16" height="16" />
               AI Assistant
             </button>
           )}
@@ -86,11 +85,10 @@ export default function SpacePageHeader({ user, space, totalSteps, onOpenChatbot
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium" style={{
                   backgroundColor: 'var(--success-bg)',
                   color: 'var(--success)',
-                  borderRadius: 'var(--radius-full)'
+                  borderRadius: 'var(--radius-full)',
+                  fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif'
                 }}>
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
+                  <Icon icon="solar:check-circle-bold" width="12" height="12" />
                   Complete
                 </span>
               )}

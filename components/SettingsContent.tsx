@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { Icon } from "@iconify/react";
 import GoogleIntegrationButton from "./GoogleIntegrationButton";
 import JiraIntegrationButton from "./JiraIntegrationButton";
 import RedditIntegrationButton from "./RedditIntegrationButton";
 import ProfileDropdown from "./ProfileDropdown";
 import SettingsNav from "./SettingsNav";
+import AutoPMLogo from "./AutoPMLogo";
 
 interface User {
   name?: string;
@@ -39,21 +41,8 @@ export default function SettingsContent({
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           {/* Left section */}
           <div className="flex items-center gap-6">
-            <Link href="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <div className="w-9 h-9 flex items-center justify-center" style={{
-                backgroundColor: 'var(--primary-bg)',
-                borderRadius: 'var(--radius-sm)'
-              }}>
-                <svg className="w-5 h-5" style={{ color: 'var(--primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <span className="text-base font-semibold tracking-tight" style={{
-                color: 'var(--text-primary)',
-                letterSpacing: '-0.01em'
-              }}>
-                Workspace
-              </span>
+            <Link href="/dashboard" className="hover:opacity-80 transition-opacity">
+              <AutoPMLogo size="sm" />
             </Link>
           </div>
 
@@ -71,9 +60,7 @@ export default function SettingsContent({
             className="inline-flex items-center gap-2 text-sm mb-5 transition-colors hover:opacity-80"
             style={{ color: 'var(--text-secondary)' }}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
+            <Icon icon="solar:alt-arrow-left-linear" width="16" height="16" />
             Back
           </Link>
           <h1 style={{
@@ -108,11 +95,12 @@ export default function SettingsContent({
                 borderRadius: 'var(--radius-lg)'
               }}>
                 <div className="flex items-start gap-2 mb-2">
-                  <svg className="w-4 h-4 shrink-0 mt-0.5" style={{ color: 'var(--primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  <Icon icon="solar:info-circle-bold" width="16" height="16" className="shrink-0 mt-0.5" style={{ color: 'var(--primary)' }} />
                   <div>
-                    <p className="text-xs font-semibold mb-1" style={{ color: 'var(--primary)' }}>
+                    <p className="text-xs font-semibold mb-1" style={{
+                      color: 'var(--primary)',
+                      fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif'
+                    }}>
                       Need Help?
                     </p>
                     <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
@@ -191,32 +179,25 @@ export default function SettingsContent({
                             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium mb-3" style={{
                               backgroundColor: 'var(--success)',
                               color: 'white',
-                              borderRadius: 'var(--radius-full)'
+                              borderRadius: 'var(--radius-full)',
+                              fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif'
                             }}>
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                              </svg>
+                              <Icon icon="solar:check-circle-bold" width="12" height="12" />
                               Connected
                             </div>
                             <div className="pt-3 border-t" style={{ borderColor: 'var(--border-secondary)' }}>
                               <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-primary)' }}>What you can do:</p>
                               <ul className="space-y-1.5">
                                 <li className="flex items-start gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                                  <svg className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: 'var(--success)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                  </svg>
+                                  <Icon icon="solar:check-circle-bold" width="14" height="14" className="shrink-0 mt-0.5" style={{ color: 'var(--success)' }} />
                                   Send automated email campaigns to stakeholders
                                 </li>
                                 <li className="flex items-start gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                                  <svg className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: 'var(--success)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                  </svg>
+                                  <Icon icon="solar:check-circle-bold" width="14" height="14" className="shrink-0 mt-0.5" style={{ color: 'var(--success)' }} />
                                   Schedule meetings and sync calendar events
                                 </li>
                                 <li className="flex items-start gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                                  <svg className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: 'var(--success)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                  </svg>
+                                  <Icon icon="solar:check-circle-bold" width="14" height="14" className="shrink-0 mt-0.5" style={{ color: 'var(--success)' }} />
                                   AI-powered email content generation
                                 </li>
                               </ul>
@@ -273,32 +254,25 @@ export default function SettingsContent({
                             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium mb-3" style={{
                               backgroundColor: 'var(--success)',
                               color: 'white',
-                              borderRadius: 'var(--radius-full)'
+                              borderRadius: 'var(--radius-full)',
+                              fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif'
                             }}>
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                              </svg>
+                              <Icon icon="solar:check-circle-bold" width="12" height="12" />
                               Connected
                             </div>
                             <div className="pt-3 border-t" style={{ borderColor: 'var(--border-secondary)' }}>
                               <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-primary)' }}>What you can do:</p>
                               <ul className="space-y-1.5">
                                 <li className="flex items-start gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                                  <svg className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: 'var(--success)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                  </svg>
+                                  <Icon icon="solar:check-circle-bold" width="14" height="14" className="shrink-0 mt-0.5" style={{ color: 'var(--success)' }} />
                                   Auto-create tickets from user stories and requirements
                                 </li>
                                 <li className="flex items-start gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                                  <svg className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: 'var(--success)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                  </svg>
+                                  <Icon icon="solar:check-circle-bold" width="14" height="14" className="shrink-0 mt-0.5" style={{ color: 'var(--success)' }} />
                                   Assign tickets to team members automatically
                                 </li>
                                 <li className="flex items-start gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                                  <svg className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: 'var(--success)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                  </svg>
+                                  <Icon icon="solar:check-circle-bold" width="14" height="14" className="shrink-0 mt-0.5" style={{ color: 'var(--success)' }} />
                                   Organize sprints with AI-generated priorities
                                 </li>
                               </ul>
@@ -355,32 +329,25 @@ export default function SettingsContent({
                             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium mb-3" style={{
                               backgroundColor: 'var(--success)',
                               color: 'white',
-                              borderRadius: 'var(--radius-full)'
+                              borderRadius: 'var(--radius-full)',
+                              fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif'
                             }}>
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                              </svg>
+                              <Icon icon="solar:check-circle-bold" width="12" height="12" />
                               Connected
                             </div>
                             <div className="pt-3 border-t" style={{ borderColor: 'var(--border-secondary)' }}>
                               <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-primary)' }}>What you can do:</p>
                               <ul className="space-y-1.5">
                                 <li className="flex items-start gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                                  <svg className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: 'var(--success)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                  </svg>
+                                  <Icon icon="solar:check-circle-bold" width="14" height="14" className="shrink-0 mt-0.5" style={{ color: 'var(--success)' }} />
                                   Analyze community feedback and sentiment
                                 </li>
                                 <li className="flex items-start gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                                  <svg className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: 'var(--success)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                  </svg>
+                                  <Icon icon="solar:check-circle-bold" width="14" height="14" className="shrink-0 mt-0.5" style={{ color: 'var(--success)' }} />
                                   Identify trending topics and pain points
                                 </li>
                                 <li className="flex items-start gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                                  <svg className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: 'var(--success)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                  </svg>
+                                  <Icon icon="solar:check-circle-bold" width="14" height="14" className="shrink-0 mt-0.5" style={{ color: 'var(--success)' }} />
                                   Research competitor mentions and market insights
                                 </li>
                               </ul>
@@ -409,11 +376,12 @@ export default function SettingsContent({
                 borderRadius: 'var(--radius-lg)'
               }}>
                 <div className="flex items-start gap-3">
-                  <svg className="w-5 h-5 shrink-0 mt-0.5" style={{ color: 'var(--info)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  <Icon icon="solar:shield-check-bold" width="20" height="20" className="shrink-0 mt-0.5" style={{ color: 'var(--info)' }} />
                   <div>
-                    <p className="text-sm font-semibold mb-2" style={{ color: 'var(--info)' }}>
+                    <p className="text-sm font-semibold mb-2" style={{
+                      color: 'var(--info)',
+                      fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif'
+                    }}>
                       Security & Privacy
                     </p>
                     <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
@@ -487,11 +455,10 @@ export default function SettingsContent({
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium" style={{
                       backgroundColor: 'var(--success-bg)',
                       color: 'var(--success)',
-                      borderRadius: 'var(--radius-full)'
+                      borderRadius: 'var(--radius-full)',
+                      fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif'
                     }}>
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
+                      <Icon icon="solar:check-circle-bold" width="12" height="12" />
                       Email Verified
                     </div>
                   </div>
@@ -564,11 +531,10 @@ export default function SettingsContent({
                       <div className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium" style={{
                         backgroundColor: 'var(--primary-bg)',
                         color: 'var(--primary)',
-                        borderRadius: 'var(--radius-full)'
+                        borderRadius: 'var(--radius-full)',
+                        fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif'
                       }}>
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
+                        <Icon icon="solar:lock-password-bold" width="12" height="12" />
                         Secure
                       </div>
                     </div>
@@ -595,12 +561,11 @@ export default function SettingsContent({
                         color: 'var(--error)',
                         backgroundColor: 'var(--error-bg)',
                         borderRadius: 'var(--radius)',
-                        border: '1px solid var(--error)'
+                        border: '1px solid var(--error)',
+                        fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif'
                       }}
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                      </svg>
+                      <Icon icon="solar:logout-2-bold" width="16" height="16" />
                       Sign Out
                     </a>
                   </div>

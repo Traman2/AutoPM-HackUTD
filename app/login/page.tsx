@@ -1,6 +1,8 @@
 import { auth0 } from "@/lib/auth0";
 import { redirect } from "next/navigation";
+import { Icon } from "@iconify/react";
 import LoginButton from "@/components/LoginButton";
+import AutoPMLogo from "@/components/AutoPMLogo";
 
 export default async function LoginPage() {
   const session = await auth0.getSession();
@@ -32,21 +34,15 @@ export default async function LoginPage() {
       }}>
         <div className="text-center mb-10">
           {/* Logo */}
-          <div className="mb-8">
-            <div className="w-14 h-14 mx-auto flex items-center justify-center" style={{
-              backgroundColor: 'var(--primary-bg)',
-              borderRadius: 'var(--radius)'
-            }}>
-              <svg className="w-7 h-7" style={{ color: 'var(--primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
+          <div className="mb-8 flex justify-center">
+            <AutoPMLogo size="lg" />
           </div>
 
           {/* Title */}
           <h1 className="text-2xl font-semibold tracking-tight mb-2" style={{
             color: 'var(--text-primary)',
-            letterSpacing: '-0.02em'
+            letterSpacing: '-0.02em',
+            fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif'
           }}>
             Welcome back
           </h1>
@@ -63,9 +59,7 @@ export default async function LoginPage() {
         {/* Footer */}
         <div className="mt-8 pt-6 border-t text-center" style={{ borderColor: 'var(--border-secondary)' }}>
           <p className="text-xs flex items-center justify-center gap-2" style={{ color: 'var(--text-tertiary)' }}>
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
+            <Icon icon="solar:lock-password-bold" width="14" height="14" />
             Secured by Auth0
           </p>
         </div>
