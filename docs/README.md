@@ -32,10 +32,12 @@ app/api/
 **Purpose:** Automate Product Manager email workflows via LangGraph
 
 **Files:**
+
 - `route.ts` - HTTP endpoint for triggering email agent
 - `tools.ts` - EmailAgent class and LangGraph integration
 
 **API Usage:**
+
 ```bash
 POST /api/agents/email
 {
@@ -50,8 +52,9 @@ POST /api/agents/email
 ```
 
 **Import Usage:**
+
 ```typescript
-import { EmailAgent, createEmailNode } from '@/app/api/agents/email/tools';
+import { EmailAgent, createEmailNode } from "@/app/api/agents/email/tools";
 
 const agent = new EmailAgent();
 const emailNode = createEmailNode(agent);
@@ -64,10 +67,12 @@ const emailNode = createEmailNode(agent);
 **Purpose:** Send Slack notifications when agents complete tasks
 
 **Files:**
+
 - `route.ts` - HTTP endpoint for triggering Slack notifications
 - `tools.ts` - SlackNotifierAgent class and LangGraph integration
 
 **API Usage:**
+
 ```bash
 POST /api/agents/slack
 {
@@ -81,8 +86,12 @@ POST /api/agents/slack
 ```
 
 **Import Usage:**
+
 ```typescript
-import { SlackNotifierAgent, createSlackNotifierNode } from '@/app/api/agents/slack/tools';
+import {
+  SlackNotifierAgent,
+  createSlackNotifierNode,
+} from "@/app/api/agents/slack/tools";
 
 const agent = new SlackNotifierAgent();
 const slackNode = createSlackNotifierNode(agent);
@@ -103,6 +112,7 @@ See `app/api/routes/README.md` for detailed documentation.
 ### Consistent Pattern
 
 Each agent follows the same structure:
+
 ```
 agent-name/
 ├── route.ts     # HTTP endpoint
@@ -118,6 +128,7 @@ agent-name/
 ### Scalability
 
 Add new agents by creating a new folder:
+
 ```bash
 app/api/agents/new-agent/
 ├── route.ts
@@ -130,18 +141,18 @@ app/api/agents/new-agent/
 
 ### Agent Endpoints
 
-| Agent | Endpoint | Purpose |
-|-------|----------|---------|
-| Email | `/api/agents/email` | Email automation |
+| Agent | Endpoint            | Purpose             |
+| ----- | ------------------- | ------------------- |
+| Email | `/api/agents/email` | Email automation    |
 | Slack | `/api/agents/slack` | Slack notifications |
 
 ### Integration Endpoints
 
-| Route | Endpoint | Purpose |
-|-------|----------|---------|
-| Email Send | `/api/email/send` | Product emails |
-| Slack Notify | `/api/slack/notify` | Slack messages |
-| Health | `/api/integrations/health` | Health check |
+| Route        | Endpoint                   | Purpose        |
+| ------------ | -------------------------- | -------------- |
+| Email Send   | `/api/email/send`          | Product emails |
+| Slack Notify | `/api/slack/notify`        | Slack messages |
+| Health       | `/api/integrations/health` | Health check   |
 
 ---
 
@@ -150,12 +161,12 @@ app/api/agents/new-agent/
 ### Using Agents in LangGraph
 
 ```typescript
-import { EmailAgent } from '@/app/api/agents/email/tools';
-import { SlackNotifierAgent } from '@/app/api/agents/slack/tools';
+import { EmailAgent } from "@/app/api/agents/email/tools";
+import { SlackNotifierAgent } from "@/app/api/agents/slack/tools";
 
 // Create agents
 const emailAgent = new EmailAgent({ enableLogging: true });
-const slackAgent = new SlackNotifierAgent({ defaultChannel: '#pm-team' });
+const slackAgent = new SlackNotifierAgent({ defaultChannel: "#pm-team" });
 
 // Process events
 const emailState = await emailAgent.processEvent(event);
@@ -179,7 +190,7 @@ curl -X POST http://localhost:3000/api/agents/email \
   -H "Content-Type: application/json" \
   -d '{"eventType": "sprint_completed", "data": {...}}'
 
-# Trigger Slack agent  
+# Trigger Slack agent
 curl -X POST http://localhost:3000/api/agents/slack \
   -H "Content-Type: application/json" \
   -d '{"eventType": "task_completed", "data": {...}}'
