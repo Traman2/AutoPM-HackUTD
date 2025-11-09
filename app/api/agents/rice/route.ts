@@ -14,9 +14,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('Analyzing RICE prioritization for features:', features || 'using defaults');
+    // Validate features array
+    if (!features || !Array.isArray(features) || features.length === 0) {
+      return NextResponse.json(
+        { error: 'Features array is required and cannot be empty' },
+        { status: 400 }
+      );
+    }
 
-    const result = await analyzeRicePrioritization(features as Feature[] | undefined);
+    console.log('Analyzing RICE prioritization for features:', features);
+
+    const result = await analyzeRicePrioritization(features as Feature[]);
 
     return NextResponse.json({
       success: true,
@@ -40,9 +48,11 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   return NextResponse.json({
     message: 'RICE Prioritization API',
+    description: 'Calculates RICE scores and provides AI-powered prioritization analysis',
     usage: {
       method: 'POST',
       endpoint: '/api/agents/rice',
+      contentType: 'application/json',
       body: {
         features: [
           {
@@ -54,7 +64,13 @@ export async function GET() {
           }
         ]
       },
-      note: 'Features parameter is optional. If not provided, default features will be used.'
+      note: 'Features array is required and must contain at least one feature'
+    },
+    fields: {
+      reach: 'Number of users affected per time period',
+      impact: '3=massive, 2=high, 1=medium, 0.5=low, 0.25=minimal',
+      confidence: 'Confidence level from 0.0 to 1.0 (e.g., 0.8 = 80%)',
+      effort: 'Effort in person-months or story points'
     }
   });
 }

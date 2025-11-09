@@ -212,8 +212,6 @@ class UserService {
     }
   }
 
-  
-
   static async getUserWithTokens(sub: string): Promise<IUser | null> {
     try {
       await connectDB();
@@ -224,6 +222,20 @@ class UserService {
       return user;
     } catch (error) {
       console.error('Error getting user with tokens:', error);
+      throw error;
+    }
+  }
+
+  static async findBySubWithGoogleTokens(sub: string): Promise<IUser | null> {
+    try {
+      await connectDB();
+
+      const user = await User.findOne({ sub })
+        .select('+googleAuth.accessToken +googleAuth.refreshToken');
+
+      return user;
+    } catch (error) {
+      console.error('Error getting user with Google tokens:', error);
       throw error;
     }
   }
