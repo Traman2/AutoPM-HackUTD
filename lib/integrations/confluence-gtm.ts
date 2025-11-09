@@ -547,17 +547,59 @@ function getConfluenceClient() {
     );
   }
 
+  // Use explicit Authorization header instead of axios auth option
+  const authHeader = `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`;
+
   return axios.create({
     baseURL: `https://${domain}/wiki/api/v2`,
-    auth: {
-      username: email,
-      password: apiToken,
-    },
     headers: {
+      'Authorization': authHeader,
       'Accept': 'application/json',
       'Content-Type': 'application/json',
     },
   });
+}
+
+/**
+ * Get space ID from space key
+ */
+async function getSpaceId(spaceKey: string): Promise<string> {
+  try {
+    console.log(`[Confluence GTM] Looking up space ID for key: ${spaceKey}`);
+    
+    // If already a numeric ID, return it
+    if (/^\d+$/.test(spaceKey)) {
+      console.log(`[Confluence GTM] Space key is already numeric ID: ${spaceKey}`);
+      return spaceKey;
+    }
+    
+    // Use axios directly with explicit auth header
+    const authHeader = `Basic ${Buffer.from(`${confluenceConfig.email}:${confluenceConfig.apiToken}`).toString('base64')}`;
+    
+    const response = await axios.get(
+      `https://${confluenceConfig.domain}/wiki/api/v2/spaces`,
+      {
+        params: { keys: spaceKey },
+        headers: {
+          'Authorization': authHeader,
+          'Accept': 'application/json',
+        },
+      }
+    );
+    
+    console.log(`[Confluence GTM] Space lookup response:`, JSON.stringify(response.data, null, 2));
+    
+    if (response.data.results && response.data.results.length > 0) {
+      const spaceId = response.data.results[0].id;
+      console.log(`[Confluence GTM] ✅ Resolved space key ${spaceKey} → space ID ${spaceId}`);
+      return spaceId;
+    }
+    
+    throw new Error(`Space not found: ${spaceKey}`);
+  } catch (error) {
+    console.error(`[Confluence GTM] ❌ Failed to get space ID for ${spaceKey}:`, error);
+    throw error;
+  }
 }
 
 /**
@@ -652,15 +694,29 @@ export async function createGTMStrategyPage(
   try {
     console.log(`[Confluence GTM] Creating GTM strategy page for ${productName} in space ${spaceKey}`);
     
-    const client = getConfluenceClient();
+    // Get space ID from space key
+    const spaceId = await getSpaceId(spaceKey);
+    console.log(`[Confluence GTM] Resolved space key ${spaceKey} to space ID ${spaceId}`);
     
     // Generate page content
     const content = generateFullPageContent(productName, gtmData);
-    const title = `GTM Strategy: ${productName}`;
+    // Add timestamp to make title unique for testing
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    const title = `GTM Strategy: ${productName} [${timestamp}]`;
+    
+    // Save content to file for debugging
+    try {
+      const fs = require('fs');
+      const debugPath = require('path').join(process.cwd(), 'debug-gtm-content.html');
+      fs.writeFileSync(debugPath, content, 'utf-8');
+      console.log(`[Confluence GTM] 📝 Content saved to ${debugPath} for debugging`);
+    } catch (e) {
+      console.warn(`[Confluence GTM] Could not save debug content:`, e);
+    }
     
     // Prepare page data
     const pageData: any = {
-      spaceId: spaceKey,
+      spaceId: spaceId,
       status: 'current',
       title: title,
       body: {
@@ -674,15 +730,59 @@ export async function createGTMStrategyPage(
       pageData.parentId = parentPageId;
     }
     
-    // Create page
-    const response = await client.post('/pages', pageData);
+    // Create page using axios directly (like meetings integration)
+    console.log(`[Confluence GTM] Creating page with payload:`, JSON.stringify({
+      spaceId: pageData.spaceId,
+      title: pageData.title,
+      status: pageData.status,
+      parentId: pageData.parentId || 'none',
+      contentLength: content.length,
+      contentPreview: content.substring(0, 100) + '...'
+    }, null, 2));
+    
+    const authHeader = `Basic ${Buffer.from(`${confluenceConfig.email}:${confluenceConfig.apiToken}`).toString('base64')}`;
+    const url = `https://${confluenceConfig.domain}/wiki/api/v2/pages`;
+    
+    console.log(`[Confluence GTM] Request URL: ${url}`);
+    console.log(`[Confluence GTM] Auth header length: ${authHeader.length}`);
+    console.log(`[Confluence GTM] Payload keys: ${Object.keys(pageData).join(', ')}`);
+    
+    // Save full payload for inspection
+    try {
+      const fs = require('fs');
+      fs.writeFileSync('debug-fetch-payload.json', JSON.stringify(pageData, null, 2), 'utf-8');
+      console.log(`[Confluence GTM] Full payload saved to debug-fetch-payload.json`);
+    } catch (e) {
+      // Ignore
+    }
+    
+    // Use native fetch instead of axios (matches manual curl tests)
+    console.log('[Confluence GTM] Using fetch API for request...');
+    const fetchResponse = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': authHeader,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(pageData),
+    });
+    
+    if (!fetchResponse.ok) {
+      const errorText = await fetchResponse.text();
+      console.error('[Confluence GTM] Fetch request failed:', fetchResponse.status, fetchResponse.statusText);
+      console.error('[Confluence GTM] Error response:', errorText);
+      throw new Error(`Confluence API error: ${fetchResponse.status} - ${errorText}`);
+    }
+    
+    const response = { data: await fetchResponse.json() };
     
     const pageId = response.data.id;
     const pageUrl = `https://${confluenceConfig.domain}/wiki${response.data._links.webui}`;
     const version = response.data.version?.number || 1;
     
     const duration = Date.now() - startTime;
-    console.log(`[Confluence GTM] Page created successfully in ${duration}ms. ID: ${pageId}`);
+    console.log(`[Confluence GTM] ✅ Page created successfully in ${duration}ms. ID: ${pageId}, URL: ${pageUrl}`);
     
     return {
       success: true,
@@ -693,9 +793,23 @@ export async function createGTMStrategyPage(
     
   } catch (error) {
     const duration = Date.now() - startTime;
-    const errorMessage = handleConfluenceError(error);
     
-    console.error(`[Confluence GTM] Failed to create page after ${duration}ms:`, errorMessage);
+    // Log full error details for debugging
+    console.error(`[Confluence GTM] ❌ Failed to create page after ${duration}ms`);
+    console.error(`[Confluence GTM] Error type:`, error instanceof Error ? error.constructor.name : typeof error);
+    
+    if (axios.isAxiosError(error)) {
+      console.error(`[Confluence GTM] Axios error details:`);
+      console.error(`  - Status: ${error.response?.status}`);
+      console.error(`  - Status Text: ${error.response?.statusText}`);
+      console.error(`  - Response data:`, JSON.stringify(error.response?.data, null, 2));
+      console.error(`  - Request URL: ${error.config?.url}`);
+      console.error(`  - Request method: ${error.config?.method}`);
+    } else {
+      console.error(`[Confluence GTM] Full error:`, error);
+    }
+    
+    const errorMessage = handleConfluenceError(error);
     
     return {
       success: false,

@@ -101,11 +101,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: true,
-          data: {
-            messageId: result.messageId,
-            to: body.to,
-            subject: body.subject,
-          },
+          messageId: result.messageId,
+          type: body.emailType,
+          recipient: body.to,
           executionTime: `${executionTime}ms`,
           timestamp: new Date().toISOString(),
         },

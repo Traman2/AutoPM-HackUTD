@@ -15,6 +15,22 @@ import {
 } from '@/lib/integrations/confluence-gtm';
 
 // ============================================================================
+// Route Configuration - Increase limits for large Confluence payloads
+// ============================================================================
+
+// Use Node.js runtime for better body parsing control
+export const runtime = 'nodejs';
+
+// Increase timeout for Confluence API calls
+export const maxDuration = 30;
+
+// Force dynamic rendering to avoid caching issues
+export const dynamic = 'force-dynamic';
+
+// Disable fetch caching
+export const fetchCache = 'force-no-store';
+
+// ============================================================================
 // Authentication Middleware
 // ============================================================================
 
@@ -57,7 +73,34 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
+    // Get raw body text first to avoid Next.js body parser size limits
+    const rawBody = await request.text();
+    
+    // Log body size for debugging
+    console.log(`[Confluence GTM Test] Received request body size: ${rawBody.length} characters`);
+    
+    // Parse JSON manually
+    let body;
+    try {
+      body = JSON.parse(rawBody);
+    } catch (parseError) {
+      console.error('[Confluence GTM Test] JSON parsing error:', parseError);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid JSON in request body',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Log what we received
+    console.log('[Confluence GTM Test] Parsed request:', {
+      spaceKey: body.spaceKey,
+      productName: body.productName,
+      gtmDataSize: body.gtmData ? JSON.stringify(body.gtmData).length : 0,
+      hasParentPageId: !!body.parentPageId
+    });
 
     // Validate required fields
     if (!body.spaceKey || !body.productName || !body.gtmData) {
@@ -96,7 +139,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('[Test Confluence GTM] Creating GTM strategy page:', body.productName);
+    console.log('[Confluence GTM Test] Creating GTM strategy page:', body.productName);
+    console.log('[Confluence GTM Test] Calling integration function...');
 
     // Create GTM page
     const result = await createGTMStrategyPage(
@@ -105,6 +149,12 @@ export async function POST(request: NextRequest) {
       gtmData,
       body.parentPageId
     );
+
+    console.log('[Confluence GTM Test] Integration function returned:', {
+      success: result.success,
+      hasPageId: !!result.pageId,
+      hasError: !!result.error
+    });
 
     const executionTime = Date.now() - startTime;
 

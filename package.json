@@ -6,7 +6,14 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "eslint .",
-    "start": "next start"
+    "start": "next start",
+    "test:integration": "tsx tests/integration-tests.ts",
+    "test:integration:skip-cleanup": "tsx tests/integration-tests.ts --skip-cleanup",
+    "test:health": "tsx tests/integration-tests.ts --test=testHealthCheck",
+    "test:email": "tsx tests/integration-tests.ts --test=testStakeholderEmail",
+    "test:slack": "tsx tests/integration-tests.ts --test=testTaskCompletedNotification",
+    "test:confluence": "tsx tests/integration-tests.ts --test=testCreateGTMPage",
+    "test:summary": "tsx tests/test-suite-summary.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -68,8 +75,10 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.2.3",
     "postcss": "^8.5",
     "tailwindcss": "^4.1.9",
+    "tsx": "^4.20.6",
     "tw-animate-css": "1.3.3",
     "typescript": "^5"
   }

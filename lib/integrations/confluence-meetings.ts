@@ -254,7 +254,10 @@ function generateMeetingTitle(data: MeetingData): string {
   
   const dateStr = data.date.toISOString().split('T')[0]; // YYYY-MM-DD format
   
-  return `${meetingTypeDisplay} - ${dateStr} - ${data.title}`;
+  // Add timestamp to make title unique for testing
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+  
+  return `${meetingTypeDisplay} - ${dateStr} - ${data.title} [${timestamp}]`;
 }
 
 /**
@@ -273,6 +276,47 @@ function generateMeetingLabels(meetingType: MeetingType, date: Date): string[] {
 // ============================================================================
 // Error Handling
 // ============================================================================
+
+/**
+ * Get space ID from space key
+ */
+async function getSpaceId(spaceKey: string): Promise<string> {
+  try {
+    console.log(`[Confluence Meetings] Looking up space ID for key: ${spaceKey}`);
+    
+    // If already a numeric ID, return it
+    if (/^\d+$/.test(spaceKey)) {
+      console.log(`[Confluence Meetings] Space key is already numeric ID: ${spaceKey}`);
+      return spaceKey;
+    }
+    
+    const response = await axios.get(
+      `https://${confluenceConfig.domain}/wiki/api/v2/spaces`,
+      {
+        params: { keys: spaceKey },
+        headers: {
+          'Authorization': `Basic ${Buffer.from(
+            `${confluenceConfig.email}:${confluenceConfig.apiToken}`
+          ).toString('base64')}`,
+          'Accept': 'application/json',
+        },
+      }
+    );
+    
+    console.log(`[Confluence Meetings] Space lookup response:`, JSON.stringify(response.data, null, 2));
+    
+    if (response.data.results && response.data.results.length > 0) {
+      const spaceId = response.data.results[0].id;
+      console.log(`[Confluence Meetings] ✅ Resolved space key ${spaceKey} → space ID ${spaceId}`);
+      return spaceId;
+    }
+    
+    throw new Error(`Space not found: ${spaceKey}`);
+  } catch (error) {
+    console.error(`[Confluence Meetings] ❌ Failed to get space ID for ${spaceKey}:`, error);
+    throw error;
+  }
+}
 
 function handleConfluenceError(error: unknown, context: string): string {
   console.error(`[Confluence Meetings] ${context}:`, error);
@@ -342,13 +386,17 @@ export async function createMeetingNotesPage(
   parentPageId?: string
 ): Promise<MeetingNotesResponse> {
   try {
+    // Get space ID from space key
+    const spaceId = await getSpaceId(spaceKey);
+    console.log(`[Confluence Meetings] Resolved space key ${spaceKey} to space ID ${spaceId}`);
+    
     const title = generateMeetingTitle(meetingData);
     const content = generateMeetingNotesContent(meetingData);
     const labels = generateMeetingLabels(meetingData.meetingType, meetingData.date);
 
     // Create page
     const pagePayload: any = {
-      spaceId: spaceKey,
+      spaceId: spaceId,
       status: 'current',
       title,
       body: {
@@ -362,41 +410,61 @@ export async function createMeetingNotesPage(
     }
 
     console.log('[Confluence Meetings] Creating meeting notes page:', title);
+    console.log('[Confluence Meetings] Page payload:', JSON.stringify({
+      spaceId: pagePayload.spaceId,
+      title: pagePayload.title,
+      status: pagePayload.status,
+      parentId: pagePayload.parentId || 'none',
+      contentLength: content.length
+    }, null, 2));
 
-    const pageResponse = await axios.post(
+    // Use native fetch instead of axios (resolves axios serialization issues)
+    const authHeader = `Basic ${Buffer.from(
+      `${confluenceConfig.email}:${confluenceConfig.apiToken}`
+    ).toString('base64')}`;
+    
+    const fetchResponse = await fetch(
       `https://${confluenceConfig.domain}/wiki/api/v2/pages`,
-      pagePayload,
       {
+        method: 'POST',
         headers: {
-          'Authorization': `Basic ${Buffer.from(
-            `${confluenceConfig.email}:${confluenceConfig.apiToken}`
-          ).toString('base64')}`,
+          'Authorization': authHeader,
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
+        body: JSON.stringify(pagePayload),
       }
     );
 
-    const pageId = pageResponse.data.id;
-    const pageUrl = `https://${confluenceConfig.domain}/wiki${pageResponse.data._links.webui}`;
+    if (!fetchResponse.ok) {
+      const errorText = await fetchResponse.text();
+      throw new Error(`Confluence API error: ${fetchResponse.status} - ${errorText}`);
+    }
+
+    const pageResponse = await fetchResponse.json();
+    const pageId = pageResponse.id;
+    const pageUrl = `https://${confluenceConfig.domain}/wiki${pageResponse._links.webui}`;
 
     console.log('[Confluence Meetings] ✅ Page created successfully:', pageUrl);
+    console.log('[Confluence Meetings] Page ID:', pageId);
 
     // Add labels
     try {
       for (const label of labels) {
-        await axios.post(
+        const labelResponse = await fetch(
           `https://${confluenceConfig.domain}/wiki/api/v2/pages/${pageId}/labels`,
-          { name: label },
           {
+            method: 'POST',
             headers: {
-              'Authorization': `Basic ${Buffer.from(
-                `${confluenceConfig.email}:${confluenceConfig.apiToken}`
-              ).toString('base64')}`,
+              'Authorization': authHeader,
               'Content-Type': 'application/json',
             },
+            body: JSON.stringify({ name: label }),
           }
         );
+        if (!labelResponse.ok) {
+          throw new Error(`Failed to add label: ${label}`);
+        }
       }
       console.log('[Confluence Meetings] ✅ Labels added:', labels.join(', '));
     } catch (labelError) {
@@ -423,6 +491,21 @@ export async function createMeetingNotesPage(
       actionItems: allActionItems,
     };
   } catch (error) {
+    // Log full error details for debugging
+    console.error(`[Confluence Meetings] ❌ Failed to create meeting notes page`);
+    console.error(`[Confluence Meetings] Error type:`, error instanceof Error ? error.constructor.name : typeof error);
+    
+    if (axios.isAxiosError(error)) {
+      console.error(`[Confluence Meetings] Axios error details:`);
+      console.error(`  - Status: ${error.response?.status}`);
+      console.error(`  - Status Text: ${error.response?.statusText}`);
+      console.error(`  - Response data:`, JSON.stringify(error.response?.data, null, 2));
+      console.error(`  - Request URL: ${error.config?.url}`);
+      console.error(`  - Request method: ${error.config?.method}`);
+    } else {
+      console.error(`[Confluence Meetings] Full error:`, error);
+    }
+    
     const errorMessage = handleConfluenceError(error, 'Failed to create meeting notes');
     return {
       success: false,
@@ -746,39 +829,51 @@ export async function createMeetingNotesTemplate(
 
     console.log('[Confluence Meetings] Creating meeting notes template...');
 
-    const response = await axios.post(
+    // Use native fetch instead of axios (resolves axios serialization issues)
+    const authHeader = `Basic ${Buffer.from(
+      `${confluenceConfig.email}:${confluenceConfig.apiToken}`
+    ).toString('base64')}`;
+    
+    const fetchResponse = await fetch(
       `https://${confluenceConfig.domain}/wiki/api/v2/pages`,
-      pagePayload,
       {
+        method: 'POST',
         headers: {
-          'Authorization': `Basic ${Buffer.from(
-            `${confluenceConfig.email}:${confluenceConfig.apiToken}`
-          ).toString('base64')}`,
+          'Authorization': authHeader,
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
+        body: JSON.stringify(pagePayload),
       }
     );
 
-    const templatePageId = response.data.id;
-    const templatePageUrl = `https://${confluenceConfig.domain}/wiki${response.data._links.webui}`;
+    if (!fetchResponse.ok) {
+      const errorText = await fetchResponse.text();
+      throw new Error(`Confluence API error: ${fetchResponse.status} - ${errorText}`);
+    }
+
+    const responseData = await fetchResponse.json();
+    const templatePageId = responseData.id;
+    const templatePageUrl = `https://${confluenceConfig.domain}/wiki${responseData._links.webui}`;
 
     console.log('[Confluence Meetings] ✅ Template created successfully:', templatePageUrl);
 
     // Add template label
     try {
-      await axios.post(
+      const labelResponse = await fetch(
         `https://${confluenceConfig.domain}/wiki/api/v2/pages/${templatePageId}/labels`,
-        { name: 'template' },
         {
+          method: 'POST',
           headers: {
-            'Authorization': `Basic ${Buffer.from(
-              `${confluenceConfig.email}:${confluenceConfig.apiToken}`
-            ).toString('base64')}`,
+            'Authorization': authHeader,
             'Content-Type': 'application/json',
           },
+          body: JSON.stringify({ name: 'template' }),
         }
       );
+      if (!labelResponse.ok) {
+        console.warn('[Confluence Meetings] ⚠️ Failed to add template label');
+      }
     } catch (labelError) {
       console.warn('[Confluence Meetings] ⚠️ Failed to add template label');
     }

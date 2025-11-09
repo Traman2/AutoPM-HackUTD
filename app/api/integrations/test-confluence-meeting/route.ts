@@ -15,6 +15,22 @@ import {
 } from '@/lib/integrations/confluence-meetings';
 
 // ============================================================================
+// Route Configuration - Increase limits for large Confluence payloads
+// ============================================================================
+
+// Use Node.js runtime for better body parsing control
+export const runtime = 'nodejs';
+
+// Increase timeout for Confluence API calls
+export const maxDuration = 30;
+
+// Force dynamic rendering to avoid caching issues
+export const dynamic = 'force-dynamic';
+
+// Disable fetch caching
+export const fetchCache = 'force-no-store';
+
+// ============================================================================
 // Authentication Middleware
 // ============================================================================
 
@@ -57,7 +73,34 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
+    // Get raw body text first to avoid Next.js body parser size limits
+    const rawBody = await request.text();
+    
+    // Log body size for debugging
+    console.log(`[Confluence Meeting Test] Received request body size: ${rawBody.length} characters`);
+    
+    // Parse JSON manually
+    let body;
+    try {
+      body = JSON.parse(rawBody);
+    } catch (parseError) {
+      console.error('[Confluence Meeting Test] JSON parsing error:', parseError);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid JSON in request body',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Log what we received
+    console.log('[Confluence Meeting Test] Parsed request:', {
+      spaceKey: body.spaceKey,
+      hasMeetingData: !!body.meetingData,
+      meetingDataSize: body.meetingData ? JSON.stringify(body.meetingData).length : 0,
+      hasParentPageId: !!body.parentPageId
+    });
 
     // Validate required fields
     if (!body.spaceKey || !body.meetingData) {
@@ -113,7 +156,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('[Test Confluence Meeting] Creating meeting notes:', meetingData.title);
+    console.log('[Confluence Meeting Test] Creating meeting notes:', meetingData.title);
+    console.log('[Confluence Meeting Test] Calling integration function...');
 
     // Create meeting notes page
     const result = await createMeetingNotesPage(
@@ -121,6 +165,12 @@ export async function POST(request: NextRequest) {
       meetingData,
       body.parentPageId
     );
+
+    console.log('[Confluence Meeting Test] Integration function returned:', {
+      success: result.success,
+      hasPageId: !!result.pageId,
+      hasError: !!result.error
+    });
 
     const executionTime = Date.now() - startTime;
 

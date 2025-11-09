@@ -11,32 +11,48 @@ import type { ConfigValidationResult } from './types';
 
 /**
  * Resend email service configuration
+ * Using getters to ensure environment variables are read dynamically
  */
 export const resendConfig = {
   /** Resend API key for authentication */
-  apiKey: process.env.RESEND_API_KEY || '',
+  get apiKey() {
+    return process.env.RESEND_API_KEY || '';
+  },
   /** Default sender email address */
-  fromEmail: process.env.RESEND_FROM_EMAIL || 'noreply@yourdomain.com',
+  get fromEmail() {
+    return process.env.RESEND_FROM_EMAIL || 'noreply@yourdomain.com';
+  },
   /** Default sender name */
-  fromName: process.env.RESEND_FROM_NAME || 'PM Automation',
+  get fromName() {
+    return process.env.RESEND_FROM_NAME || 'PM Automation';
+  },
   /** API base URL */
   baseUrl: 'https://api.resend.com',
   /** Request timeout in milliseconds */
   timeout: 10000,
-} as const;
+};
 
 /**
  * Slack Web API configuration
+ * Using getters to ensure environment variables are read dynamically
  */
 export const slackConfig = {
   /** Slack bot token for authentication (starts with xoxb-) */
-  botToken: process.env.SLACK_BOT_TOKEN || '',
+  get botToken() {
+    return process.env.SLACK_BOT_TOKEN || '';
+  },
   /** Default channel for notifications */
-  defaultChannel: process.env.SLACK_DEFAULT_CHANNEL || '#general',
+  get defaultChannel() {
+    return process.env.SLACK_DEFAULT_CHANNEL || '#general';
+  },
   /** Bot username display */
-  botName: process.env.SLACK_BOT_NAME || 'PM Automation Bot',
+  get botName() {
+    return process.env.SLACK_BOT_NAME || 'PM Automation Bot';
+  },
   /** Bot icon emoji */
-  botEmoji: process.env.SLACK_BOT_EMOJI || ':robot_face:',
+  get botEmoji() {
+    return process.env.SLACK_BOT_EMOJI || ':robot_face:';
+  },
   /** Request timeout in milliseconds */
   timeout: 10000,
   /** Retry configuration */
@@ -44,25 +60,34 @@ export const slackConfig = {
     maxAttempts: 3,
     factor: 2,
   },
-} as const;
+};
 
 /**
  * Atlassian Confluence API configuration
+ * Using getters to ensure environment variables are read dynamically
  */
 export const confluenceConfig = {
   /** Confluence domain (e.g., yourcompany.atlassian.net) */
-  domain: process.env.CONFLUENCE_DOMAIN || '',
+  get domain() {
+    return process.env.CONFLUENCE_DOMAIN || '';
+  },
   /** Confluence user email for authentication */
-  email: process.env.CONFLUENCE_EMAIL || '',
+  get email() {
+    return process.env.CONFLUENCE_EMAIL || '';
+  },
   /** Confluence API token */
-  apiToken: process.env.CONFLUENCE_API_TOKEN || '',
+  get apiToken() {
+    return process.env.CONFLUENCE_API_TOKEN || '';
+  },
   /** API version */
   apiVersion: 'latest',
   /** Request timeout in milliseconds */
   timeout: 15000,
   /** Default space key for pages */
-  defaultSpaceKey: process.env.CONFLUENCE_DEFAULT_SPACE || '',
-} as const;
+  get defaultSpaceKey() {
+    return process.env.CONFLUENCE_DEFAULT_SPACE || '';
+  },
+};
 
 /**
  * Get the full Confluence API base URL
