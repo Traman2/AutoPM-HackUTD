@@ -11,26 +11,63 @@ export default async function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F5F5F7' }}>
-      <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full">
-        <div className="text-center mb-8">
-          <div className="mb-6">
-            <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(155, 107, 122, 0.1)' }}>
-              <svg className="w-8 h-8" style={{ color: '#9B6B7A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--background)' }}>
+      {/* Background Pattern */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-br opacity-5" style={{
+          background: 'radial-gradient(circle, var(--primary) 0%, transparent 70%)',
+          filter: 'blur(40px)'
+        }} />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gradient-to-tl opacity-5" style={{
+          background: 'radial-gradient(circle, var(--primary) 0%, transparent 70%)',
+          filter: 'blur(40px)'
+        }} />
+      </div>
+
+      {/* Login Card */}
+      <div className="relative bg-white p-10 max-w-md w-full border" style={{
+        borderRadius: 'var(--radius-lg)',
+        borderColor: 'var(--border)',
+        boxShadow: 'var(--shadow-xl)'
+      }}>
+        <div className="text-center mb-10">
+          {/* Logo */}
+          <div className="mb-8">
+            <div className="w-14 h-14 mx-auto flex items-center justify-center" style={{
+              backgroundColor: 'var(--primary-bg)',
+              borderRadius: 'var(--radius)'
+            }}>
+              <svg className="w-7 h-7" style={{ color: 'var(--primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
           </div>
-          <h1 className="text-3xl font-semibold tracking-tight mb-2" style={{ color: '#1A1A1A' }}>Welcome</h1>
-          <p className="text-sm" style={{ color: '#6B6B6B' }}>Sign in to access your product workspace</p>
+
+          {/* Title */}
+          <h1 className="text-2xl font-semibold tracking-tight mb-2" style={{
+            color: 'var(--text-primary)',
+            letterSpacing: '-0.02em'
+          }}>
+            Welcome back
+          </h1>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            Sign in to continue to your workspace
+          </p>
         </div>
 
+        {/* Login Button */}
         <div className="space-y-4">
           <LoginButton />
         </div>
 
-        <div className="mt-8 text-center text-xs" style={{ color: '#9CA3AF' }}>
-          <p>Secure authentication powered by Auth0</p>
+        {/* Footer */}
+        <div className="mt-8 pt-6 border-t text-center" style={{ borderColor: 'var(--border-secondary)' }}>
+          <p className="text-xs flex items-center justify-center gap-2" style={{ color: 'var(--text-tertiary)' }}>
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            Secured by Auth0
+          </p>
         </div>
       </div>
     </div>

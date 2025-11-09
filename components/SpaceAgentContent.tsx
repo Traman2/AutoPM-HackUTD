@@ -176,28 +176,42 @@ export default function SpaceAgentContent({ space: initialSpace, agentSteps, vie
 
       default:
         return (
-          <div className="bg-white rounded-lg p-8 shadow-sm text-center" style={{ border: '1px solid #E5E5E5' }}>
-            <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: 'rgba(155, 107, 122, 0.08)' }}>
+          <div className="bg-white p-8 border text-center" style={{
+            borderColor: 'var(--border)',
+            borderRadius: 'var(--radius-lg)',
+            boxShadow: 'var(--shadow-sm)'
+          }}>
+            <div className="w-14 h-14 mx-auto flex items-center justify-center mb-5" style={{
+              backgroundColor: 'var(--primary-bg)',
+              borderRadius: 'var(--radius)'
+            }}>
               {agentSteps[space.currentStep - 1].icon && (
-                <div style={{ color: '#9B6B7A' }} className="scale-150">
+                <div style={{ color: 'var(--primary)' }} className="scale-150">
                   {agentSteps[space.currentStep - 1].icon}
                 </div>
               )}
             </div>
-            <h2 className="text-2xl font-semibold mb-6" style={{ color: '#1A1A1A' }}>
+            <h2 className="text-2xl font-semibold tracking-tight mb-6" style={{
+              color: 'var(--text-primary)',
+              letterSpacing: '-0.02em'
+            }}>
               {agentSteps[space.currentStep - 1].name}
             </h2>
 
             {/* Coming Soon Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6" style={{ backgroundColor: 'rgba(155, 107, 122, 0.08)', color: '#9B6B7A' }}>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            <div className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium mb-6" style={{
+              backgroundColor: 'var(--primary-bg)',
+              color: 'var(--primary)',
+              borderRadius: 'var(--radius-full)'
+            }}>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
               Coming Soon
             </div>
 
-            <p className="text-sm max-w-md mx-auto" style={{ color: '#9CA3AF' }}>
-              This agent is currently under development. It will be available soon!
+            <p className="text-sm max-w-md mx-auto leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+              This agent is currently under development and will be available soon
             </p>
           </div>
         );

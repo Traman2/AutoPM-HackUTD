@@ -28,33 +28,43 @@ interface SpacePageHeaderProps {
 
 export default function SpacePageHeader({ user, space, totalSteps, onOpenChatbot }: SpacePageHeaderProps) {
   return (
-    <header className="bg-white shadow-sm">
+    <header className="bg-white border-b" style={{
+      borderColor: 'var(--border)',
+      backdropFilter: 'blur(8px)',
+      backgroundColor: 'rgba(255, 255, 255, 0.95)'
+    }}>
       <div className="max-w-[1600px] mx-auto px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link
             href="/dashboard"
             className="flex items-center gap-2 text-sm transition-colors hover:opacity-80"
-            style={{ color: '#6B6B6B' }}
+            style={{ color: 'var(--text-secondary)' }}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
-            Back to Dashboard
+            Back
           </Link>
 
           {/* AI Chatbot Button - only show when space has some progress */}
           {space.currentStep > 0 && onOpenChatbot && (
             <button
               onClick={onOpenChatbot}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white transition-all duration-200"
-              style={{ backgroundColor: '#9B6B7A' }}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-all duration-200"
+              style={{
+                backgroundColor: 'var(--primary)',
+                borderRadius: 'var(--radius)',
+                boxShadow: 'var(--shadow-sm)'
+              }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#8A5A69';
-                e.currentTarget.style.transform = 'scale(1.02)';
+                e.currentTarget.style.backgroundColor = 'var(--primary-hover)';
+                e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#9B6B7A';
-                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.backgroundColor = 'var(--primary)';
+                e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
+                e.currentTarget.style.transform = 'translateY(0)';
               }}
             >
               <MessageCircle className="w-4 h-4" />
@@ -66,17 +76,26 @@ export default function SpacePageHeader({ user, space, totalSteps, onOpenChatbot
         <div className="flex items-center gap-4">
           <div className="text-right">
             <div className="flex items-center justify-end gap-2">
-              <p className="text-sm font-medium" style={{ color: '#1A1A1A' }}>{space.name}</p>
+              <p className="text-sm font-medium tracking-tight" style={{
+                color: 'var(--text-primary)',
+                letterSpacing: '-0.01em'
+              }}>
+                {space.name}
+              </p>
               {space.completed && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium" style={{ backgroundColor: '#D1FAE5', color: '#065F46' }}>
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium" style={{
+                  backgroundColor: 'var(--success-bg)',
+                  color: 'var(--success)',
+                  borderRadius: 'var(--radius-full)'
+                }}>
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                   Complete
                 </span>
               )}
             </div>
-            <p className="text-xs" style={{ color: '#6B6B6B' }}>
+            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
               {space.completed ? 'All steps completed' : `Step ${space.currentStep} of ${totalSteps}`}
             </p>
           </div>

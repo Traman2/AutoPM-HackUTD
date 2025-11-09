@@ -76,6 +76,7 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@iconify-icon/react": "^3.0.3",
     "@tailwindcss/postcss": "^4.1.9",
     "@types/auth0": "^3.3.11",
     "@types/node": "^22",

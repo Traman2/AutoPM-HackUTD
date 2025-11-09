@@ -5,6 +5,7 @@ import Space from "@/models/Space";
 import Link from "next/link";
 import SpacePageClient from "@/components/SpacePageClient";
 import SpaceAgentContent from "@/components/SpaceAgentContent";
+import SpaceStepLink from "@/components/SpaceStepLink";
 
 export default async function SpacePage({ 
   params,
@@ -191,7 +192,7 @@ export default async function SpacePage({
   ];
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#F5F5F7' }}>
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
       <SpacePageClient
         user={{
           name: user.name,
@@ -211,22 +212,30 @@ export default async function SpacePage({
         {/* Main Content - Two Panel Layout */}
         <div className="flex max-w-[1600px] mx-auto">
         {/* Left Panel - Agent Pipeline */}
-        <aside className="w-80 bg-white border-r shrink-0" style={{ borderColor: '#E5E5E5', minHeight: 'calc(100vh - 64px)' }}>
+        <aside className="w-80 bg-white border-r shrink-0" style={{
+          borderColor: 'var(--border)',
+          minHeight: 'calc(100vh - 64px)'
+        }}>
           <div className="p-6">
             <div className="mb-6">
-              <h2 className="text-sm font-semibold uppercase tracking-wide mb-1" style={{ color: '#6B6B6B' }}>
-                Agent Pipeline
+              <h2 className="text-xs font-semibold uppercase tracking-wider mb-1" style={{
+                color: 'var(--text-secondary)',
+                letterSpacing: '0.05em'
+              }}>
+                Workflow
               </h2>
-              <p className="text-xs" style={{ color: '#9CA3AF' }}>
-                Follow the workflow to build your product
+              <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                AI-powered development pipeline
               </p>
             </div>
 
             {/* Progress Bar */}
             <div className="mb-6">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium" style={{ color: '#6B6B6B' }}>Progress</span>
-                <span className="text-xs font-semibold" style={{ color: space.completed ? '#10B981' : '#9B6B7A' }}>
+              <div className="flex items-center justify-between mb-2.5">
+                <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Progress</span>
+                <span className="text-xs font-semibold" style={{
+                  color: space.completed ? 'var(--success)' : 'var(--primary)'
+                }}>
                   {(() => {
                     const completedSteps = agentSteps.filter(step => hasStepData(step.number)).length;
                     const progressPercent = Math.round((completedSteps / agentSteps.length) * 100);
@@ -234,11 +243,15 @@ export default async function SpacePage({
                   })()}
                 </span>
               </div>
-              <div className="h-2 rounded-full" style={{ backgroundColor: '#E5E5E5' }}>
+              <div className="h-1.5" style={{
+                backgroundColor: 'var(--border-secondary)',
+                borderRadius: 'var(--radius-full)'
+              }}>
                 <div
-                  className="h-full rounded-full transition-all duration-300"
+                  className="h-full transition-all duration-300"
                   style={{
-                    backgroundColor: space.completed ? '#10B981' : '#9B6B7A',
+                    backgroundColor: space.completed ? 'var(--success)' : 'var(--primary)',
+                    borderRadius: 'var(--radius-full)',
                     width: (() => {
                       if (space.completed) return '100%';
                       const completedSteps = agentSteps.filter(step => hasStepData(step.number)).length;
@@ -248,25 +261,32 @@ export default async function SpacePage({
                 />
               </div>
               {space.completed && (
-                <div className="flex items-center gap-1.5 mt-2 px-2 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: '#D1FAE5', color: '#065F46' }}>
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <div className="flex items-center gap-1.5 mt-2.5 px-2.5 py-1 text-xs font-medium" style={{
+                  backgroundColor: 'var(--success-bg)',
+                  color: 'var(--success)',
+                  borderRadius: 'var(--radius-full)'
+                }}>
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
-                  Workflow Complete
+                  Complete
                 </div>
               )}
             </div>
 
             {/* Problem Statement */}
-            <div className="mb-6 pb-6" style={{ borderBottom: '1px solid #E5E5E5' }}>
-              <h3 className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#6B6B6B' }}>
-                Problem Statement
+            <div className="mb-6 pb-6" style={{ borderBottom: `1px solid var(--border)` }}>
+              <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{
+                color: 'var(--text-secondary)',
+                letterSpacing: '0.05em'
+              }}>
+                Problem
               </h3>
-              <p className="text-sm leading-relaxed mb-3" style={{ color: '#1A1A1A' }}>
+              <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--text-primary)' }}>
                 {space.problemStatement}
               </p>
-              <p className="text-xs" style={{ color: '#9CA3AF' }}>
-                Created {new Date(space.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                {new Date(space.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               </p>
             </div>
 
@@ -293,46 +313,17 @@ export default async function SpacePage({
                 const isActiveView = viewStep ? step.number === viewStep : step.number === space.currentStep;
 
                 return (
-                  <Link
+                  <SpaceStepLink
                     key={step.number}
-                    href={isClickable ? `/space/${space._id}?step=${step.number}` : '#'}
-                    className={`block w-full text-left px-3 py-2 rounded transition-all ${isClickable ? 'cursor-pointer hover:shadow-sm' : 'cursor-not-allowed'}`}
-                    style={{
-                      backgroundColor: isActiveView ? 'rgba(155, 107, 122, 0.08)' : isPending ? '#FAFAFA' : '#F9FAFB',
-                      border: `1px solid ${isActiveView ? '#9B6B7A' : '#E5E5E5'}`,
-                    }}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      {/* Step Icon */}
-                      <div
-                        className="w-7 h-7 rounded flex items-center justify-center shrink-0 transition-all"
-                        style={{
-                          backgroundColor: isCompleted ? '#10B981' : isActiveView ? '#9B6B7A' : '#F3F4F6',
-                          color: isCompleted || isActiveView ? '#FFFFFF' : '#9CA3AF',
-                        }}
-                      >
-                        {isCompleted && !isActiveView ? (
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
-                        ) : (
-                          <div className="scale-75">{step.icon}</div>
-                        )}
-                      </div>
-
-                      {/* Step Name */}
-                      <div className="flex-1 min-w-0">
-                        <p
-                          className="text-xs font-semibold"
-                          style={{
-                            color: isPending ? '#9CA3AF' : '#1A1A1A',
-                          }}
-                        >
-                          {step.name}
-                        </p>
-                      </div>
-                    </div>
-                  </Link>
+                    spaceId={space._id}
+                    stepNumber={step.number}
+                    isClickable={isClickable}
+                    isActiveView={isActiveView}
+                    isPending={isPending}
+                    isCompleted={isCompleted}
+                    stepName={step.name}
+                    stepIcon={step.icon}
+                  />
                 );
               })}
             </div>
