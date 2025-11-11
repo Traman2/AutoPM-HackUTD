@@ -11,7 +11,6 @@ AutoPM runs an end-to-end PM workflow inside a “Space” (one project), powere
 * **Idea Generation**: Researches your problem, proposes multiple data-backed solutions, with sources.
 * **Story Agent**: Expands your chosen solution into user stories, acceptance criteria, and tech notes.
 * **Market Research**: Conducts a web search for customer feedback, industry trends and competitor analysis.
-* **Story Agent**: Expands your chosen solution into user stories, acceptance criteria, and tech notes.
 * **Email Agent**: Drafts stakeholder updates and sends via Gmail with delivery tracking.
 * **RICE Agent**: Breaks work into features and prioritizes with sortable RICE scoring.
 * **OKR Alignment**: Analyzes your uploaded OKRs (PDF) and maps proposed work to org goals.
