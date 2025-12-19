@@ -52,4 +52,14 @@ Plus a **context-aware AI assistant** that knows your project history and a **ma
 
 ## Tech Stack
 
-LangGraph • LangChain • Google Gemini • Tavily •Next.js • React/TypeScript • Tailwind • MongoDB • Auth0 •  Gmail API • Jira Cloud • Zod. 
+- LangGraph/LangChain
+- Google Gemini
+- Tavily
+- Next.js
+- React/TypeScript
+- Tailwind
+- MongoDB
+- Auth0
+- Gmail API
+- Jira Cloud
+- Zod
